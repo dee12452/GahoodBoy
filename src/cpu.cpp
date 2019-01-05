@@ -8,22 +8,27 @@
 ///////////////////////
 
 /* Control Instructions */
-static inline uint8_t NOP(uint16_t &programCounter);
+static uint8_t NOP(uint16_t &programCounter);
 
 /* Jumpers :) */
-static inline uint8_t JP(uint16_t &programCounter, uint16_t newAddress);
+static uint8_t JP(uint16_t &programCounter, uint16_t newAddress);
+static uint8_t JR(uint16_t &programCounter, const signed char addToCounter);
 
 /* Load, store, move */
-static inline uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
-static inline uint8_t LD_ADDR(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
-static inline uint8_t LD(uint16_t &programCounter, uint8_t &highReg, uint8_t &lowReg, const uint8_t highData, const uint8_t lowData);
+static uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
+static uint8_t LD_ADDR(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
+static uint8_t LD_D(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
+static uint8_t LD_D(uint16_t &programCounter, uint8_t &highReg, uint8_t &lowReg, const uint8_t highData, const uint8_t lowData);
+static uint8_t LD_D(uint16_t &programCounter, uint16_t &reg, const uint16_t value);
 
 /* Arithmetic */
-static inline uint8_t INC(uint16_t &programCounter, uint8_t &reg);
-static inline uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
-static inline uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
-static inline uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
-static inline uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg);
+static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg);
+static uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static uint8_t CPL(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA);
 
 /* Rotation / Shifts */
 
@@ -93,17 +98,80 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
     {
         case 0x00:
             return NOP(registers.programCounter);
+        case 0x01:
+        {
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
+            return LD_D(registers.programCounter, registers.B, registers.C, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
+        }
         case 0x11:
         {
-            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD")) return 0;
-            return LD(registers.programCounter, registers.D, registers.E, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
+            return LD_D(registers.programCounter, registers.D, registers.E, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
+        }
+        case 0x18:
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 2, "JR")) return 0;
+            return JR(registers.programCounter, static_cast<signed char>(memory[registers.programCounter + 0x01]));
+        case 0x1d:
+            return DEC(registers.programCounter, registers.flags, registers.E);
+        case 0x21:
+        {
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
+            return LD_D(registers.programCounter, registers.H, registers.L, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
+        }
+        case 0x2e:
+        {
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 2, "LD_D")) return 0;
+            return LD_D(registers.programCounter, registers.L, memory[registers.programCounter + 0x01]);
         }
         case 0x2c:
-            return INC(registers.programCounter, registers.L);
+            return INC(registers.programCounter, registers.flags, registers.L);
+        case 0x2d:
+            return DEC(registers.programCounter, registers.flags, registers.L);
+        case 0x2f:
+            return CPL(registers.programCounter, registers.flags, registers.A);
+        case 0x31:
+        {
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
+            return LD_D(registers.programCounter, registers.stackPointer, create16Bit(memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]));
+        }
+        case 0x40:
+            return LD(registers.programCounter, registers.B, registers.B);
+        case 0x41:
+            return LD(registers.programCounter, registers.B, registers.C);
+        case 0x42:
+            return LD(registers.programCounter, registers.B, registers.D);
+        case 0x43:
+            return LD(registers.programCounter, registers.B, registers.E);
+        case 0x44:
+            return LD(registers.programCounter, registers.B, registers.H);
+        case 0x45:
+            return LD(registers.programCounter, registers.B, registers.L);
+        case 0x46:
+            return LD_ADDR(registers.programCounter, registers.B, memory[create16Bit(registers.H, registers.L)]);
+        case 0x47:
+            return LD(registers.programCounter, registers.B, registers.A);
+        case 0x48:
+            return LD(registers.programCounter, registers.C, registers.B);
+        case 0x49:
+            return LD(registers.programCounter, registers.C, registers.C);
         case 0x4a:
             return LD(registers.programCounter, registers.C, registers.D);
         case 0x4b:
             return LD(registers.programCounter, registers.C, registers.E);
+        case 0x4c:
+            return LD(registers.programCounter, registers.C, registers.H);
+        case 0x4d:
+            return LD(registers.programCounter, registers.C, registers.L);
+        case 0x4e:
+            return LD_ADDR(registers.programCounter, registers.C, memory[create16Bit(registers.H, registers.L)]);
+        case 0x4f:
+            return LD(registers.programCounter, registers.C, registers.A);
+        case 0x50:
+            return LD(registers.programCounter, registers.D, registers.B);
+        case 0x51:
+            return LD(registers.programCounter, registers.D, registers.C);
+        case 0x52:
+            return LD(registers.programCounter, registers.D, registers.D);
         case 0x53:
             return LD(registers.programCounter, registers.D, registers.E);
         case 0x55:
@@ -128,6 +196,30 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             return LD_ADDR(registers.programCounter, registers.E, memory[create16Bit(registers.H, registers.L)]);
         case 0x5f:
             return LD(registers.programCounter, registers.E, registers.A);
+        case 0x60:
+            return LD(registers.programCounter, registers.H, registers.B);
+        case 0x61:
+            return LD(registers.programCounter, registers.H, registers.C);
+        case 0x62:
+            return LD(registers.programCounter, registers.H, registers.D);
+        case 0x63:
+            return LD(registers.programCounter, registers.H, registers.E);
+        case 0x64:
+            return LD(registers.programCounter, registers.H, registers.H);
+        case 0x65:
+            return LD(registers.programCounter, registers.H, registers.L);
+        case 0x66:
+            return LD_ADDR(registers.programCounter, registers.H, memory[create16Bit(registers.H, registers.L)]);
+        case 0x67:
+            return LD(registers.programCounter, registers.H, registers.A);
+        case 0x68:
+            return LD(registers.programCounter, registers.L, registers.B);
+        case 0x69:
+            return LD(registers.programCounter, registers.L, registers.C);
+        case 0x6a:
+            return LD(registers.programCounter, registers.L, registers.D);
+        case 0x6b:
+            return LD(registers.programCounter, registers.L, registers.E);
         case 0x6c:
             return LD(registers.programCounter, registers.L, registers.H);
         case 0x6e:
@@ -146,6 +238,24 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.H);
         case 0x75:
             return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.L);
+        case 0x77:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.A);
+        case 0x78:
+            return LD(registers.programCounter, registers.A, registers.B);
+        case 0x79:
+            return LD(registers.programCounter, registers.A, registers.C);
+        case 0x7a:
+            return LD(registers.programCounter, registers.A, registers.D);
+        case 0x7b:
+            return LD(registers.programCounter, registers.A, registers.E);
+        case 0x7c:
+            return LD(registers.programCounter, registers.A, registers.H);
+        case 0x7d:
+            return LD(registers.programCounter, registers.A, registers.L);
+        case 0x7e:
+            return LD_ADDR(registers.programCounter, registers.A, memory[create16Bit(registers.H, registers.L)]);
+        case 0x7f:
+            return LD(registers.programCounter, registers.A, registers.A);
         case 0x90:
             return SUB(registers.programCounter, registers.flags, registers.A, registers.B);
         case 0x91:
@@ -205,106 +315,162 @@ void Cpu::cycleDelay(int clocks) const
 // OpCode implementations //
 ////////////////////////////
 
-static inline void setCarryFlag(uint8_t &flags)
+static void setCarryFlag(uint8_t &flags, bool on)
 {
-    flags |= 0x10; // Set the C flag to true
+    if(on)
+    {
+        flags |= 0x10; // Set the C flag to true
+    }
+    else
+    {
+        flags &= 0xE0;
+    }
 }
 
-static inline void setHalfCarryFlag(uint8_t &flags)
+static void setHalfCarryFlag(uint8_t &flags, bool on)
 {
-    flags |= 0x20; // Set the C flag to true
+    if(on)
+    {
+        flags |= 0x20; // Set the C flag to true
+    }
+    else
+    {
+        flags &= 0xD0;
+    }
 }
 
-static inline void setSubtractFlag(uint8_t &flags)
+static void setSubtractFlag(uint8_t &flags, bool on)
 {
-    flags |= 0x40; // Set the C flag to true
+    if(on)
+    {
+        flags |= 0x40; // Set the C flag to true
+    }
+    else
+    {
+        flags &= 0xB0; // Set the C flag to true
+    }
 }
 
-static inline void setZeroFlag(uint8_t &flags)
+static void setZeroFlag(uint8_t &flags, bool on)
 {
-    flags |= 0x80; // Set the Z flag to true
+    if(on)
+    {
+        flags |= 0x80; // Set the Z flag to true
+    }
+    else
+    {
+        flags &= 0x70; // Set the C flag to true
+    }
 }
 
-static inline uint8_t NOP(uint16_t &programCounter)
+static uint8_t NOP(uint16_t &programCounter)
 {
     programCounter += 0x01;
     return 4;
 }
 
-static inline uint8_t INC(uint16_t &programCounter, uint8_t &reg)
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
 {
+    setSubtractFlag(flags, false);
+    setHalfCarryFlag(flags, (reg & 0x07) == 0x07);
     reg += 0x01;
+    setZeroFlag(flags, reg == 0x00);
     programCounter += 0x01;
     return 4;
 }
 
-static inline uint8_t JP(uint16_t &programCounter, uint16_t newAddress)
+static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
+{
+    setSubtractFlag(flags, true);
+    setHalfCarryFlag(flags, (reg & 0x07) == 0x00);
+    reg -= 0x01;
+    setZeroFlag(flags, reg == 0x00);
+    programCounter += 0x01;
+    return 4;
+}
+
+static uint8_t JP(uint16_t &programCounter, uint16_t newAddress)
 {
     programCounter = newAddress;
     return 16; // TODO could this be 12 according to the GB CPU man
 }
 
-static inline uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
+static uint8_t JR(uint16_t &programCounter, const signed char addToCounter)
+{
+    programCounter += addToCounter;
+    return 12;
+}
+
+static uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
 {
     reg = value;
     programCounter += 0x01;
     return 4;
 }
 
-static inline uint8_t LD(uint16_t &programCounter, uint8_t &highReg, uint8_t &lowReg, const uint8_t highData, const uint8_t lowData)
-{
-    highReg = highData;
-    lowReg = lowData;
-    programCounter += 0x03;
-    return 4;
-}
-
-static inline uint8_t LD_ADDR(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
+static uint8_t LD_ADDR(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
 {
     return LD(programCounter, reg, value) * 2;
 }
 
-static inline uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+static uint8_t LD_D(uint16_t &programCounter, uint8_t &highReg, uint8_t &lowReg, const uint8_t highData, const uint8_t lowData)
 {
-    setSubtractFlag(flags);
+    highReg = highData;
+    lowReg = lowData;
+    programCounter += 0x03;
+    return 12;
+}
+
+static uint8_t LD_D(uint16_t &programCounter, uint16_t &reg, const uint16_t value)
+{
+    reg = value;
+    programCounter += 0x03;
+    return 12;
+}
+
+static uint8_t LD_D(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
+{
+    programCounter += 0x01;
+    return LD(programCounter, reg, value) * 2;
+}
+
+static uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+{
+    setSubtractFlag(flags, true);
     registerA -= value;
-    if(value << 4 > registerA << 4)
-    {
-        setHalfCarryFlag(flags);
-    }
-    if(value > registerA)
-    {
-        registerA = 0;
-        setCarryFlag(flags);
-    }
-    else 
-    {
-        registerA -= value;
-    }
-    if(registerA == 0)
-    {
-        setZeroFlag(flags);
-    }
+    setHalfCarryFlag(flags, (value << 4) > (registerA << 4));
+    setCarryFlag(flags, (value > registerA));
+    registerA -= value;
+    setZeroFlag(flags, registerA == 0x00);
 
     programCounter += 0x01;
     return 4;
 }
 
-static inline uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+static uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
 {
     return SUB(programCounter, flags, registerA, value) * 2;
 }
 
-static inline uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+static uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
 {
     const bool carryOn = (flags & 0x10) == 0x10;
     uint8_t valueToSubtract = carryOn ? value + 1 : value; // Add 1 to value if carry flag is on
     return SUB(programCounter, flags, registerA, value);
 }
 
-static inline uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+static uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
 {
     return SUBC(programCounter, flags, registerA, value) * 2;
+}
+
+static uint8_t CPL(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA)
+{
+    setSubtractFlag(flags, true);
+    setHalfCarryFlag(flags, true);
+    registerA = ~registerA;
+    programCounter += 0x01;
+    return 4;
 }
 
 ////////////////////////////////
