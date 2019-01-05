@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "rom.hpp"
 #include "cpu.hpp"
+#include "utils.hpp"
 
 static const uint16_t GAMEBOY_PROGRAM_COUNTER_START = 0x100;
 
@@ -33,7 +34,7 @@ void Emulator::run(int argc, char **argv)
 
 static void init()
 {
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
     {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize SDL2: %s", SDL_GetError());
         exit(EXIT_FAILURE);

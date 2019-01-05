@@ -5,10 +5,13 @@
 
 typedef struct Registers 
 {
-    uint16_t A; // Accumulator
-    uint16_t B;
-    uint16_t D;
-    uint16_t H;
+    uint8_t A; // Accumulator
+    uint8_t B;
+    uint8_t C;
+    uint8_t D;
+    uint8_t E;
+    uint8_t H;
+    uint8_t L;
 
     /* Flag register bits:
     7 6 5 4 3 2 1 0
@@ -21,9 +24,6 @@ typedef struct Registers
     0 = Not used, always 0
     */
     uint8_t flags; 
-    uint8_t C;
-    uint8_t E;
-    uint8_t L;
 
     uint16_t stackPointer;
     uint16_t programCounter;
@@ -38,6 +38,9 @@ class Cpu
     
     private:
         Registers registers;
+
+        uint8_t processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize);
+        void cycleDelay(int clocks) const;
 };
 
 #endif
