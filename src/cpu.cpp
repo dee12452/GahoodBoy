@@ -319,7 +319,7 @@ static void setCarryFlag(uint8_t &flags, bool on)
 {
     if(on)
     {
-        flags |= 0x10; // Set the C flag to true
+        flags |= 0x10;
     }
     else
     {
@@ -331,7 +331,7 @@ static void setHalfCarryFlag(uint8_t &flags, bool on)
 {
     if(on)
     {
-        flags |= 0x20; // Set the C flag to true
+        flags |= 0x20;
     }
     else
     {
@@ -343,11 +343,11 @@ static void setSubtractFlag(uint8_t &flags, bool on)
 {
     if(on)
     {
-        flags |= 0x40; // Set the C flag to true
+        flags |= 0x40;
     }
     else
     {
-        flags &= 0xB0; // Set the C flag to true
+        flags &= 0xB0;
     }
 }
 
@@ -355,11 +355,11 @@ static void setZeroFlag(uint8_t &flags, bool on)
 {
     if(on)
     {
-        flags |= 0x80; // Set the Z flag to true
+        flags |= 0x80;
     }
     else
     {
-        flags &= 0x70; // Set the C flag to true
+        flags &= 0x70;
     }
 }
 
