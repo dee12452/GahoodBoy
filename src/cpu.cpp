@@ -21,6 +21,9 @@ static inline uint8_t LD(uint16_t &programCounter, uint8_t &highReg, uint8_t &lo
 /* Arithmetic */
 static inline uint8_t INC(uint16_t &programCounter, uint8_t &reg);
 static inline uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static inline uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static inline uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
+static inline uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
 
 /* Rotation / Shifts */
 
@@ -117,18 +120,64 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             return LD(registers.programCounter, registers.E, registers.D);
         case 0x5b:
             return LD(registers.programCounter, registers.E, registers.E);
+        case 0x5c:
+            return LD(registers.programCounter, registers.E, registers.H);
+        case 0x5d:
+            return LD(registers.programCounter, registers.E, registers.L);
+        case 0x5e:
+            return LD_ADDR(registers.programCounter, registers.E, memory[create16Bit(registers.H, registers.L)]);
+        case 0x5f:
+            return LD(registers.programCounter, registers.E, registers.A);
         case 0x6c:
             return LD(registers.programCounter, registers.L, registers.H);
         case 0x6e:
             return LD_ADDR(registers.programCounter, registers.L, memory[create16Bit(registers.H, registers.L)]);
         case 0x6f:
             return LD(registers.programCounter, registers.L, registers.A);
+        case 0x70:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.B);
+        case 0x71:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.C);
+        case 0x72:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.D);
+        case 0x73:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.E);
+        case 0x74:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.H);
         case 0x75:
             return LD_ADDR(registers.programCounter, memory[create16Bit(registers.H, registers.L)], registers.L);
         case 0x90:
             return SUB(registers.programCounter, registers.flags, registers.A, registers.B);
         case 0x91:
             return SUB(registers.programCounter, registers.flags, registers.A, registers.C);
+        case 0x92:
+            return SUB(registers.programCounter, registers.flags, registers.A, registers.D);
+        case 0x93:
+            return SUB(registers.programCounter, registers.flags, registers.A, registers.E);
+        case 0x94:
+            return SUB(registers.programCounter, registers.flags, registers.A, registers.H);
+        case 0x95:
+            return SUB(registers.programCounter, registers.flags, registers.A, registers.L);
+        case 0x96:
+            return SUB_ADDR(registers.programCounter, registers.flags, registers.A, memory[create16Bit(registers.H, registers.L)]);
+        case 0x97:
+            return SUB(registers.programCounter, registers.flags, registers.A, registers.A);
+        case 0x98:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.B);
+        case 0x99:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.C);
+        case 0x9a:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.D);
+        case 0x9b:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.E);
+        case 0x9c:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.H);
+        case 0x9d:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.L);
+        case 0x9e:
+            return SUBC_ADDR(registers.programCounter, registers.flags, registers.A, memory[create16Bit(registers.H, registers.L)]);
+        case 0x9f:
+            return SUBC(registers.programCounter, registers.flags, registers.A, registers.A);
         case 0xc3:
         {
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "JP")) return 0;
@@ -239,6 +288,23 @@ static inline uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &reg
 
     programCounter += 0x01;
     return 4;
+}
+
+static inline uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+{
+    return SUB(programCounter, flags, registerA, value) * 2;
+}
+
+static inline uint8_t SUBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+{
+    const bool carryOn = (flags & 0x10) == 0x10;
+    uint8_t valueToSubtract = carryOn ? value + 1 : value; // Add 1 to value if carry flag is on
+    return SUB(programCounter, flags, registerA, value);
+}
+
+static inline uint8_t SUBC_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value)
+{
+    return SUBC(programCounter, flags, registerA, value) * 2;
 }
 
 ////////////////////////////////
