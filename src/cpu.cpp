@@ -103,11 +103,15 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
             return LD_D(registers.programCounter, registers.B, registers.C, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
         }
+        case 0x02:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.B, registers.C)], registers.A);
         case 0x11:
         {
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
             return LD_D(registers.programCounter, registers.D, registers.E, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
         }
+        case 0x12:
+            return LD_ADDR(registers.programCounter, memory[create16Bit(registers.D, registers.E)], registers.A);
         case 0x18:
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 2, "JR")) return 0;
             return JR(registers.programCounter, static_cast<signed char>(memory[registers.programCounter + 0x01]));
@@ -392,7 +396,7 @@ static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
 static uint8_t JP(uint16_t &programCounter, uint16_t newAddress)
 {
     programCounter = newAddress;
-    return 16; // TODO could this be 12 according to the GB CPU man
+    return 16;
 }
 
 static uint8_t JR(uint16_t &programCounter, const signed char addToCounter)
