@@ -32,7 +32,7 @@ typedef struct Registers
 class Cpu
 {
     public:
-        Cpu(const uint16_t programCounterStart);
+        Cpu(const uint16_t programCounterStart, const uint16_t stackPointerStart);
 
         bool processNext(uint8_t *memory, uint16_t memorySize);
     

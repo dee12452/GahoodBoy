@@ -11,8 +11,9 @@
 static uint8_t NOP(uint16_t &programCounter);
 
 /* Jumpers :) */
-static uint8_t JP(uint16_t &programCounter, uint16_t newAddress);
+static uint8_t JP(uint16_t &programCounter, const uint16_t newAddress);
 static uint8_t JR(uint16_t &programCounter, const signed char addToCounter);
+static uint8_t CALL(uint16_t &programCounter, const uint16_t newAddress);
 
 /* Load, store, move */
 static uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value);
@@ -23,6 +24,8 @@ static uint8_t LD_D(uint16_t &programCounter, uint16_t &reg, const uint16_t valu
 
 /* Arithmetic */
 static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg);
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &regHigh, uint8_t &regLow);
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint16_t &reg);
 static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg);
 static uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
 static uint8_t SUB_ADDR(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value);
@@ -40,7 +43,7 @@ static uint8_t CPL(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA)
 // CPU implementation //
 ////////////////////////
 
-Cpu::Cpu(const uint16_t programCounterStart)
+Cpu::Cpu(const uint16_t programCounterStart, uint16_t stackPointerStart)
 {
     registers.A = 0x00;
     registers.B = 0x00;
@@ -50,7 +53,7 @@ Cpu::Cpu(const uint16_t programCounterStart)
     registers.C = 0x00;
     registers.E = 0x00;
     registers.L = 0x00;
-    registers.stackPointer = 0x00;
+    registers.stackPointer = stackPointerStart;
     registers.programCounter = programCounterStart;
 }
 
@@ -58,13 +61,13 @@ bool Cpu::processNext(uint8_t *memory, uint16_t memorySize)
 {
     if(!memory || memorySize == 0)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU tried processing empty memory. Was game ROM loaded properly?\n");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU tried processing empty memory. Was game ROM loaded properly?");
         return false;
     }
 
     if(registers.programCounter > memorySize) 
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU program counter is outside the bounds of the memory size\n");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU program counter %x is outside the bounds of the memory size %x", registers.programCounter & 0xFFFF, memorySize & 0xFFFF);
         return false;
     }
 
@@ -105,6 +108,8 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
         }
         case 0x02:
             return LD_ADDR(registers.programCounter, memory[create16Bit(registers.B, registers.C)], registers.A);
+        case 0x03:
+            return INC(registers.programCounter, registers.flags, registers.B, registers.C);
         case 0x11:
         {
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
@@ -112,9 +117,11 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
         }
         case 0x12:
             return LD_ADDR(registers.programCounter, memory[create16Bit(registers.D, registers.E)], registers.A);
+        case 0x13:
+            return INC(registers.programCounter, registers.flags, registers.D, registers.E);
         case 0x18:
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 2, "JR")) return 0;
-            return JR(registers.programCounter, static_cast<signed char>(memory[registers.programCounter + 0x01]));
+            return JR(registers.programCounter, static_cast<signed char> (memory[registers.programCounter + 0x01]));
         case 0x1d:
             return DEC(registers.programCounter, registers.flags, registers.E);
         case 0x21:
@@ -122,6 +129,8 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
             return LD_D(registers.programCounter, registers.H, registers.L, memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]);
         }
+        case 0x23:
+            return INC(registers.programCounter, registers.flags, registers.H, registers.L);
         case 0x2e:
         {
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 2, "LD_D")) return 0;
@@ -138,6 +147,8 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "LD_D")) return 0;
             return LD_D(registers.programCounter, registers.stackPointer, create16Bit(memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]));
         }
+        case 0x33:
+            return INC(registers.programCounter, registers.flags, registers.stackPointer);
         case 0x40:
             return LD(registers.programCounter, registers.B, registers.B);
         case 0x41:
@@ -295,13 +306,19 @@ uint8_t Cpu::processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize)
         case 0xc3:
         {
             if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "JP")) return 0;
-            uint16_t newAddress = memory[registers.programCounter + 0x01];
-            newAddress = newAddress << 8;
-            newAddress = newAddress | memory[registers.programCounter + 0x02];
-            return JP(registers.programCounter, newAddress);
+            return JP(registers.programCounter, create16Bit(memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]));
+        }
+        case 0xcd:
+        {
+            if(!hasSpaceForOperation(memorySize, registers.programCounter, 3, "CALL")) return 0;
+            registers.stackPointer--;
+            memory[registers.stackPointer] = memory[registers.programCounter + 0x02];
+            registers.stackPointer--;
+            memory[registers.stackPointer] = memory[registers.programCounter + 0x01];
+            return CALL(registers.programCounter, create16Bit(memory[registers.programCounter + 0x01], memory[registers.programCounter + 0x02]));
         }
         default:
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU encountered unknown op-code %x", opCode & 0xff);
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "CPU encountered unknown op-code %x at %x", opCode & 0xFF, registers.programCounter & 0xFF);
     }
     return 0;      
 }
@@ -383,6 +400,23 @@ static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
     return 4;
 }
 
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &regHigh, uint8_t &regLow)
+{
+    uint16_t value = create16Bit(regHigh, regLow);
+    value++;
+    regHigh = static_cast<uint8_t> (value & 0xFF00 >> 8);
+    regLow = static_cast<uint8_t> (value & 0x00FF);
+    programCounter += 0x01;
+    return 8;
+}
+
+static uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint16_t &reg)
+{
+    reg++;
+    programCounter += 0x01;
+    return 8;
+}
+
 static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
 {
     setSubtractFlag(flags, true);
@@ -393,7 +427,7 @@ static uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
     return 4;
 }
 
-static uint8_t JP(uint16_t &programCounter, uint16_t newAddress)
+static uint8_t JP(uint16_t &programCounter, const uint16_t newAddress)
 {
     programCounter = newAddress;
     return 16;
@@ -403,6 +437,13 @@ static uint8_t JR(uint16_t &programCounter, const signed char addToCounter)
 {
     programCounter += addToCounter;
     return 12;
+}
+
+static uint8_t CALL(uint16_t &programCounter, const uint16_t newAddress)
+{
+    SDL_Log("Jumping from %x to %x", programCounter & 0xFFFF, newAddress & 0xFFFF);
+    programCounter = newAddress;
+    return 24;
 }
 
 static uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value)
