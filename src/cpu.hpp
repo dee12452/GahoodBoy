@@ -1,7 +1,7 @@
 #ifndef _GAHOOD_BOY_CPU_HPP_
 #define _GAHOOD_BOY_CPU_HPP_
 
-#include <stdint.h>
+#include "memory.hpp"
 
 typedef struct Registers 
 {
@@ -34,13 +34,13 @@ class Cpu
     public:
         Cpu(const uint16_t programCounterStart, const uint16_t stackPointerStart);
 
-        bool processNext(uint8_t *memory, uint16_t memorySize);
+        bool process(Memory &memory);
     
     private:
         Registers registers;
 
-        uint8_t processOpCode(uint8_t opCode, uint8_t *memory, uint16_t memorySize);
-        void cycleDelay(int clocks) const;
+        uint8_t processOpCode(const uint8_t opCode, Memory &memory);
+        void cycleDelay(const uint8_t clocks) const;
 };
 
 #endif

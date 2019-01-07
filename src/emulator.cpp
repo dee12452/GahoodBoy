@@ -3,7 +3,7 @@
 #include <SDL2/SDL.h>
 #include "rom.hpp"
 #include "cpu.hpp"
-#include "utils.hpp"
+#include "util.hpp"
 
 static const uint16_t GAMEBOY_PROGRAM_COUNTER_START = 0x100;
 static const uint16_t GAMEBOY_STACK_POINTER_START = 0xFFFE;
@@ -23,9 +23,10 @@ void Emulator::run(int argc, char **argv)
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Loading ROM %s", argv[1]);
 
     Rom rom(argv[1]);
+    Memory memory(rom);
 
     Cpu cpu(GAMEBOY_PROGRAM_COUNTER_START, GAMEBOY_STACK_POINTER_START);
-    while(cpu.processNext(rom.getProgramMemory(), rom.getProgramMemorySize()))
+    while(cpu.process(memory))
     {
         // Update emulator
     }

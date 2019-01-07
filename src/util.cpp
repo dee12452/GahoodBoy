@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include "util.hpp"
 #include <stddef.h>
 
 bool string_equals(char *str1, char *str2)

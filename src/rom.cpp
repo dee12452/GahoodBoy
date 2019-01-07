@@ -18,11 +18,11 @@ Rom::Rom(const char *romFilePath)
     SDL_RWops *romFile = SDL_RWFromFile(romFilePath, "rb");
     if(!romFile)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to read ROM file: %s", SDL_GetError());
+        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to read ROM file: %s", SDL_GetError());
         exit(EXIT_FAILURE);
     }
 
-    size_t currentMemorySize = 256; // start with 256 bytes allocated for memory
+    uint16_t currentMemorySize = 256; // start with 256 bytes allocated for memory
     programMemory = (uint8_t *) malloc(sizeof(uint8_t) * currentMemorySize);
     memorySize = 0;
     uint8_t byteBuffer[1];
@@ -36,6 +36,7 @@ Rom::Rom(const char *romFilePath)
             uint8_t *tmp = (uint8_t *) realloc(programMemory, sizeof(uint8_t) * currentMemorySize);
             if(!tmp)
             {
+                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to create memory for ROM");
                 exit(EXIT_FAILURE);
             }
             programMemory = tmp;
@@ -56,7 +57,7 @@ Rom::Rom(const char *romFilePath)
 Rom::Rom(const Rom &otherRom)
 {
     programMemory = (uint8_t *) malloc(sizeof(uint8_t) * otherRom.memorySize);
-    for(size_t i = 0; i < otherRom.memorySize; i++)
+    for(uint16_t i = 0; i < otherRom.memorySize; i++)
     {
         programMemory[i] = otherRom.programMemory[i];
     }
@@ -70,7 +71,7 @@ Rom& Rom::operator=(const Rom &otherRom)
         free(programMemory);
     }
     programMemory = (uint8_t *) malloc(sizeof(uint8_t) * otherRom.memorySize);
-    for(size_t i = 0; i < otherRom.memorySize; i++)
+    for(uint16_t i = 0; i < otherRom.memorySize; i++)
     {
         programMemory[i] = otherRom.programMemory[i];
     }
@@ -92,18 +93,18 @@ uint8_t * Rom::getProgramMemory() const
     return programMemory;
 }
 
-size_t Rom::getProgramMemorySize() const
+uint16_t Rom::getProgramMemorySize() const
 {
     return memorySize;
 }
 
 bool isRomExtensionValid(const char * const validExtensions[], const char *romFilePath)
 {
-    size_t iterator = 0;
+    uint16_t iterator = 0;
     while(validExtensions[iterator][0] != '\0')
     {
         const char *validExtension = validExtensions[iterator];
-        size_t extIterator = 0, lastExt = 0;
+        uint16_t extIterator = 0, lastExt = 0;
         while(romFilePath[extIterator] != '\0')
         {
             if(romFilePath[extIterator] == '.')

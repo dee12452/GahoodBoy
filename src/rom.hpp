@@ -1,7 +1,7 @@
 #ifndef _GAHOOD_BOY_ROM_HPP_
 #define _GAHOOD_BOY_ROM_HPP_
 
-#include <stdlib.h>
+#include <stdint.h>
 
 class Rom
 {
@@ -15,11 +15,11 @@ class Rom
         ~Rom();
 
         uint8_t * getProgramMemory() const;
-        size_t getProgramMemorySize() const;
+        uint16_t getProgramMemorySize() const;
 
     private:
         uint8_t *programMemory;
-        size_t memorySize;
+        uint16_t memorySize;
 };
 
 #endif
