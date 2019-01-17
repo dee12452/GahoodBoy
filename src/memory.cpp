@@ -1,76 +1,62 @@
 #include "memory.hpp"
 
-#include <SDL2/SDL.h>
-
-static const uint16_t GAMEBOY_MEMORY_MAP_SIZE = 0xFFFF;
-
-Memory::Memory(const Rom &rom)
+Memory::Memory(const Cartridge &cartridge)
 {
-    memorySize = GAMEBOY_MEMORY_MAP_SIZE;
-    memory = (uint8_t *) malloc(sizeof(uint8_t) * GAMEBOY_MEMORY_MAP_SIZE);
-    for(uint16_t i = 0; i < memorySize; i++)
+    memorySize = 0xFFFF;
+    memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
+    for(address i = 0x00; i < memorySize; i += 0x01)
     {
-        if(i < rom.getProgramMemorySize())
+        if(i <= 0x8000)
         {
-            memory[i] = rom.getProgramMemory()[i];
+            memoryBytes[i] = cartridge.getCartridgeMemory()[i];
         }
         else
         {
-            memory[i] = 0x00;
+            memoryBytes[i] = 0x00;
         }
     }
 }
 
-Memory::Memory(const Memory &mem)
+Memory::Memory(const Memory &other)
 {
-    memorySize = mem.memorySize;
-    memory = (uint8_t *) malloc(sizeof(uint8_t) * memorySize);
-    for(uint16_t i = 0; i < memorySize; i++)
+    memorySize = 0xFFFF;
+    memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
+    for(address i = 0; i <= memorySize; i+=0x01)
     {
-        memory[i] = mem.memory[i];
+        memoryBytes[i] = other.memoryBytes[i];
     }
 }
 
-Memory& Memory::operator=(const Memory &mem)
+Memory& Memory::operator=(const Memory &other)
 {
-    if(memory)
+    if(memoryBytes)
     {
-        free(memory);
+        free(memoryBytes);
     }
-    memorySize = mem.memorySize;
-    memory = (uint8_t *) malloc(sizeof(uint8_t) * memorySize);
-    for(uint16_t i = 0; i < memorySize; i++)
+    memorySize = 0xFFFF;
+    memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
+    for(address i = 0; i <= memorySize; i+=0x01)
     {
-        memory[i] = mem.memory[i];
+        memoryBytes[i] = other.memoryBytes[i];
     }
     return *this;
 }
 
 Memory::~Memory()
 {
-    if(memory)
+    if(memoryBytes)
     {
-        free(memory);
+        free(memoryBytes);
     }
-    memorySize = 0;
+    memorySize = 0x00;
 }
 
-uint8_t& Memory::readByte(const uint16_t memoryAddress) const
+byte Memory::read(const address addr) const
 {
-    if(memoryAddress >= memorySize)
-    {
-        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Tried reading byte at out of bounds memory address %x", memoryAddress & 0xFFFF);
-        exit(EXIT_FAILURE);
-    }
-    return memory[memoryAddress];
+    return memoryBytes[addr];
 }
 
-void Memory::writeByte(const uint8_t byte, const uint16_t memoryAddress)
+void Memory::write(const address addr, const byte byteToWrite)
 {
-    if(memoryAddress >= memorySize)
-    {
-        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Tried writing byte %x at out of bounds memory address %x", byte & 0xFF, memoryAddress & 0xFFFF);
-        exit(EXIT_FAILURE);
-    }
-    memory[memoryAddress] = byte;
+    memoryBytes[addr] = byteToWrite;
 }

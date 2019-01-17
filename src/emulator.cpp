@@ -1,12 +1,6 @@
 #include "emulator.hpp"
 
-#include <SDL2/SDL.h>
-#include "rom.hpp"
 #include "cpu.hpp"
-#include "util.hpp"
-
-static const uint16_t GAMEBOY_PROGRAM_COUNTER_START = 0x100;
-static const uint16_t GAMEBOY_STACK_POINTER_START = 0xFFFE;
 
 static void init();
 static void quit();
@@ -17,15 +11,14 @@ void Emulator::run(int argc, char **argv)
 
     if(argc != 2)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Invalid arguments passed. You must pass only the path to the ROM");
-        exit(EXIT_FAILURE);
+        Gahood::criticalError("Invalid arguments passed. You must pass only the path to the ROM");
     }
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Loading ROM %s", argv[1]);
+    Gahood::log( "Loading ROM %s", argv[1]);
 
-    Rom rom(argv[1]);
-    Memory memory(rom);
+    Cartridge cartridge(argv[1]);
+    Memory memory(cartridge);
 
-    Cpu cpu(GAMEBOY_PROGRAM_COUNTER_START, GAMEBOY_STACK_POINTER_START);
+    Cpu cpu;
     while(cpu.process(memory))
     {
         // Update emulator
@@ -38,8 +31,7 @@ static void init()
 {
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
     {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize SDL2: %s", SDL_GetError());
-        exit(EXIT_FAILURE);
+        Gahood::criticalSdlError("Failed to initialize SDL2");
     }
 }
 

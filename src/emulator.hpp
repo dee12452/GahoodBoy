@@ -4,6 +4,6 @@
 namespace Emulator
 {
     void run(int argc, char **argv);
-};
+}
 
 #endif

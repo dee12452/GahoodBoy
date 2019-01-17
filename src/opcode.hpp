@@ -1,133 +1,177 @@
 #ifndef _GAHOOD_BOY_OPCODE_HPP_
 #define _GAHOOD_BOY_OPCODE_HPP_
 
-#include "util.hpp"
+#include "memory.hpp"
 
-static void setCarryFlag(uint8_t &flags, const bool on);
-static void setHalfCarryFlag(uint8_t &flags, const bool on);
-static void setSubtractFlag(uint8_t &flags, const bool on);
-static void setZeroFlag(uint8_t &flags, const bool on);
+static inline bool getCarryFlag(byte &flags);
+static inline void setCarryFlag(byte &flags, const bool on);
+static inline void setHalfCarryFlag(byte &flags, const bool on);
+static inline void setSubtractFlag(byte &flags, const bool on);
+static inline void setZeroFlag(byte &flags, const bool on);
 
 /* Control Instructions */
-inline uint8_t NOP(uint16_t &programCounter)
+inline cycle NOP(address &programCounter)
 {
     programCounter += 0x01;
     return 4;
 }
 
-/* Jumpers :) */
-inline uint8_t JP(uint16_t &programCounter, const uint16_t newAddress)
-{
-    programCounter = newAddress;
-    return 16;
-}
-
-inline uint8_t JR(uint16_t &programCounter, const signed char addToCounter)
-{
-    programCounter += addToCounter;
-    return 12;
-}
-
-inline uint8_t CALL(uint16_t &programCounter, const uint16_t newAddress)
-{
-    programCounter = newAddress;
-    return 24;
-}
-
 /* Load, store, move */
-inline uint8_t LD(uint16_t &programCounter, uint8_t &reg, const uint8_t value, const bool fromAddress)
+inline cycle LD(address &programCounter, byte &reg1, const byte reg2)
 {
-    reg = value;
+    reg1 = reg2;
     programCounter += 0x01;
-    return fromAddress ? 8 : 4;
+    return 4;
 }
 
-inline uint8_t LD(uint16_t &programCounter, uint16_t &reg, const uint16_t value)
+inline cycle LD(Memory &memory, address &programCounter, byte &reg1)
 {
-    reg = value;
-    programCounter += 0x01;
+    reg1 = memory.read(programCounter + 0x01);
+    programCounter += 0x02;
+    return 8;
+}
+
+inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, const byte regLow)
+{
+    memory.write(Gahood::addressFromBytes(regHigh, regLow), memory.read(programCounter + 0x01));
+    programCounter += 0x02;
     return 12;
 }
 
-inline uint8_t LD(uint16_t &programCounter, uint8_t &highReg, uint8_t &lowReg, const uint8_t highData, const uint8_t lowData)
+inline cycle LD(Memory &memory, address &programCounter, byte &regHigh, byte &regLow, const byte value, const bool increment, const bool decrement, const bool fromRegister)
 {
-    highReg = highData;
-    lowReg = lowData;
+    address writeAddr = Gahood::addressFromBytes(regHigh, regLow);
+    memory.write(writeAddr, value);
+    if(increment)
+    {
+        writeAddr += 0x01;
+        regHigh = static_cast<byte> (writeAddr >> 8);
+        regLow = static_cast<byte> (writeAddr & 0x00FF);
+    }
+    else if(decrement)
+    {
+        writeAddr -= 0x01;
+        regHigh = static_cast<byte> (writeAddr >> 8);
+        regLow = static_cast<byte> (writeAddr & 0x00FF);
+    }
+    programCounter += fromRegister ? 0x01 : 0x02;
+    return fromRegister ? 8 : 12;
+}
+
+inline cycle LD16(Memory &memory, address &programCounter, byte &regHigh, byte &regLow)
+{
+    regHigh = memory.read(programCounter + 0x01);
+    regLow = memory.read(programCounter + 0x02);
+    programCounter += 0x03;
+    return 12;
+}
+
+inline cycle LD16(Memory &memory, address &programCounter, address &stackPointer)
+{
+    stackPointer = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter + 0x02));
     programCounter += 0x03;
     return 12;
 }
 
 /* Arithmetic */
-inline uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
+static cycle INC(address &programCounter, byte &flags, byte &reg)
 {
-    setSubtractFlag(flags, false);
-    setHalfCarryFlag(flags, (reg & 0x07) == 0x07);
+    setHalfCarryFlag(flags, (reg & 0x0F) == 0x0F);
     reg += 0x01;
+    setSubtractFlag(flags, false);
     setZeroFlag(flags, reg == 0x00);
     programCounter += 0x01;
     return 4;
 }
 
-inline uint8_t INC(uint16_t &programCounter, uint8_t &flags, uint8_t &regHigh, uint8_t &regLow)
+static cycle INC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
 {
-    uint16_t value = create16Bit(regHigh, regLow);
-    value++;
-    regHigh = static_cast<uint8_t> (value & 0xFF00 >> 8);
-    regLow = static_cast<uint8_t> (value & 0x00FF);
+    const address addr = Gahood::addressFromBytes(regHigh, regLow);
+    byte byteToInc = memory.read(addr);
+    setHalfCarryFlag(flags, (byteToInc & 0x0F) == 0x0F);
+    byteToInc += 0x01;
+    setSubtractFlag(flags, false);
+    setZeroFlag(flags, byteToInc == 0x00);
+    memory.write(addr, byteToInc);
+    programCounter += 0x01;
+    return 12;
+}
+
+static cycle INC16(address &programCounter, byte &regHigh, byte &regLow)
+{
+    const address addr = Gahood::addressFromBytes(regHigh, regLow) + 0x01;
+    regHigh = static_cast<byte> (addr >> 8);
+    regLow = static_cast<byte> (addr & 0x00FF);
     programCounter += 0x01;
     return 8;
 }
 
-inline uint8_t INC(uint16_t &programCounter, uint16_t &reg)
+static cycle INC16(address &programCounter, address &stackPointer)
 {
-    reg++;
+    stackPointer += 0x01;
     programCounter += 0x01;
     return 8;
 }
 
-inline uint8_t DEC(uint16_t &programCounter, uint8_t &flags, uint8_t &reg)
+static cycle DEC(address &programCounter, byte &flags, byte &reg)
 {
-    setSubtractFlag(flags, true);
-    setHalfCarryFlag(flags, (reg & 0x07) == 0x00);
+    setHalfCarryFlag(flags, (reg & 0x0F) == 0x00);
     reg -= 0x01;
+    setSubtractFlag(flags, true);
     setZeroFlag(flags, reg == 0x00);
     programCounter += 0x01;
     return 4;
 }
 
-inline uint8_t SUB(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value, const bool fromAddress)
+static cycle DEC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
 {
+    const address addr = Gahood::addressFromBytes(regHigh, regLow);
+    byte byteToDec = memory.read(addr);
+    setHalfCarryFlag(flags, (byteToDec & 0x0F) == 0x00);
+    byteToDec -= 0x01;
     setSubtractFlag(flags, true);
-    registerA -= value;
-    setHalfCarryFlag(flags, (value << 4) > (registerA << 4));
-    setCarryFlag(flags, (value > registerA));
-    registerA -= value;
-    setZeroFlag(flags, registerA == 0x00);
-
+    setZeroFlag(flags, byteToDec == 0x00);
+    memory.write(addr, byteToDec);
     programCounter += 0x01;
-    return fromAddress ? 8 : 4;
-}
-
-inline uint8_t SBC(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA, const uint8_t value, const bool fromAddress)
-{
-    const bool carryOn = (flags & 0x10) == 0x10;
-    uint8_t valueToSubtract = carryOn ? value + 1 : value; // Add 1 to value if carry flag is on
-    return SUB(programCounter, flags, registerA, valueToSubtract, fromAddress);
-}
-
-inline uint8_t CPL(uint16_t &programCounter, uint8_t &flags, uint8_t &registerA)
-{
-    setSubtractFlag(flags, true);
-    setHalfCarryFlag(flags, true);
-    registerA = ~registerA;
-    programCounter += 0x01;
-    return 4;
+    return 12;
 }
 
 /* Rotation / Shifts */
+inline cycle RLCA(address &programCounter, byte &flags, byte &regA)
+{
+    const bool carry = (regA & 0x80) == 0x80;
+    regA <<= 1;
+    regA = carry ? regA | 0x01 : regA;
+    setCarryFlag(flags, carry);
+    setZeroFlag(flags, false);
+    setSubtractFlag(flags, false);
+    setHalfCarryFlag(flags, false);
+    programCounter += 0x01;
+    return 4;
+}
 
+inline cycle RLA(address &programCounter, byte &flags, byte &regA)
+{
+    const bool carry = (regA & 0x80) == 0x80;
+    regA <<= 1;
+    regA = getCarryFlag(flags) ? regA | 0x01 : regA;
+    setCarryFlag(flags, carry);
+    setZeroFlag(flags, false);
+    setSubtractFlag(flags, false);
+    setHalfCarryFlag(flags, false);
+    programCounter += 0x01;
+    return 4;
+}
 
-static void setCarryFlag(uint8_t &flags, const bool on)
+/* Jumpers :) */
+
+/* Flag getters and setters */
+static inline bool getCarryFlag(byte &flags)
+{
+    return (flags & 0x10) == 0x10;
+}
+
+static inline void setCarryFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -139,7 +183,7 @@ static void setCarryFlag(uint8_t &flags, const bool on)
     }
 }
 
-static void setHalfCarryFlag(uint8_t &flags, const bool on)
+static inline void setHalfCarryFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -151,7 +195,7 @@ static void setHalfCarryFlag(uint8_t &flags, const bool on)
     }
 }
 
-static void setSubtractFlag(uint8_t &flags, const bool on)
+static inline void setSubtractFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -163,7 +207,7 @@ static void setSubtractFlag(uint8_t &flags, const bool on)
     }
 }
 
-static void setZeroFlag(uint8_t &flags, const bool on)
+static inline void setZeroFlag(byte &flags, const bool on)
 {
     if(on)
     {
