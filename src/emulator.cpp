@@ -5,7 +5,7 @@
 static void init();
 static void quit();
 
-void Emulator::run(int argc, char **argv)
+int Emulator::run(int argc, char **argv)
 {
     init();
 
@@ -25,6 +25,8 @@ void Emulator::run(int argc, char **argv)
     }
 
     quit();
+
+	return 0;
 }
 
 static void init()

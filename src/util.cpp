@@ -2,7 +2,7 @@
 
 bool Gahood::stringEquals(char *str1, char *str2)
 {
-    size_t iterator = 0;
+    size iterator = 0;
     while(str1[iterator] == str2[iterator])
     {
         if(str1[iterator] == '\0')
@@ -16,7 +16,7 @@ bool Gahood::stringEquals(char *str1, char *str2)
 
 bool Gahood::stringLiteralEquals(char *str1, const char *str2)
 {
-    size_t iterator = 0;
+    size iterator = 0;
     while(str1[iterator] == str2[iterator])
     {
         if(str1[iterator] == '\0')
@@ -36,7 +36,7 @@ address Gahood::addressFromBytes(const byte highByte, const byte lowByte)
     return twoBytes;
 }
 
-byte * Gahood::readFileAsBytes(const char *filePath, size_t &sizeOfFile)
+byte * Gahood::readFileAsBytes(const char *filePath, size &sizeOfFile)
 {
     SDL_RWops *fileCtx = SDL_RWFromFile(filePath, "rb");
     if(!fileCtx)
@@ -45,7 +45,7 @@ byte * Gahood::readFileAsBytes(const char *filePath, size_t &sizeOfFile)
         exit(EXIT_FAILURE);
     }
 
-    size_t currentMemorySize = 256; // start with 256 bytes allocated for memory
+	size currentMemorySize = 256; // start with 256 bytes allocated for memory
     byte * fileBytes = (byte *) malloc(sizeof(byte) * currentMemorySize);
     sizeOfFile = 0;
     byte byteBuffer[1];
