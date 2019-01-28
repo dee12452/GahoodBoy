@@ -3,11 +3,11 @@
 
 #include "memory.hpp"
 
-static inline bool getCarryFlag(byte &flags);
-static inline void setCarryFlag(byte &flags, const bool on);
-static inline void setHalfCarryFlag(byte &flags, const bool on);
-static inline void setSubtractFlag(byte &flags, const bool on);
-static inline void setZeroFlag(byte &flags, const bool on);
+inline bool getCarryFlag(byte &flags);
+inline void setCarryFlag(byte &flags, const bool on);
+inline void setHalfCarryFlag(byte &flags, const bool on);
+inline void setSubtractFlag(byte &flags, const bool on);
+inline void setZeroFlag(byte &flags, const bool on);
 
 /* Control Instructions */
 inline cycle NOP(address &programCounter)
@@ -74,7 +74,7 @@ inline cycle LD16(Memory &memory, address &programCounter, address &stackPointer
 }
 
 /* Arithmetic */
-static cycle INC(address &programCounter, byte &flags, byte &reg)
+inline cycle INC(address &programCounter, byte &flags, byte &reg)
 {
     setHalfCarryFlag(flags, (reg & 0x0F) == 0x0F);
     reg += 0x01;
@@ -84,7 +84,7 @@ static cycle INC(address &programCounter, byte &flags, byte &reg)
     return 4;
 }
 
-static cycle INC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
+inline cycle INC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
 {
     const address addr = Gahood::addressFromBytes(regHigh, regLow);
     byte byteToInc = memory.read(addr);
@@ -97,7 +97,7 @@ static cycle INC(Memory &memory, address &programCounter, byte &flags, const byt
     return 12;
 }
 
-static cycle INC16(address &programCounter, byte &regHigh, byte &regLow)
+inline cycle INC16(address &programCounter, byte &regHigh, byte &regLow)
 {
     const address addr = Gahood::addressFromBytes(regHigh, regLow) + 0x01;
     regHigh = static_cast<byte> (addr >> 8);
@@ -106,14 +106,14 @@ static cycle INC16(address &programCounter, byte &regHigh, byte &regLow)
     return 8;
 }
 
-static cycle INC16(address &programCounter, address &stackPointer)
+inline cycle INC16(address &programCounter, address &stackPointer)
 {
     stackPointer += 0x01;
     programCounter += 0x01;
     return 8;
 }
 
-static cycle DEC(address &programCounter, byte &flags, byte &reg)
+inline cycle DEC(address &programCounter, byte &flags, byte &reg)
 {
     setHalfCarryFlag(flags, (reg & 0x0F) == 0x00);
     reg -= 0x01;
@@ -123,7 +123,7 @@ static cycle DEC(address &programCounter, byte &flags, byte &reg)
     return 4;
 }
 
-static cycle DEC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
+inline cycle DEC(Memory &memory, address &programCounter, byte &flags, const byte regHigh, const byte regLow)
 {
     const address addr = Gahood::addressFromBytes(regHigh, regLow);
     byte byteToDec = memory.read(addr);
@@ -134,6 +134,17 @@ static cycle DEC(Memory &memory, address &programCounter, byte &flags, const byt
     memory.write(addr, byteToDec);
     programCounter += 0x01;
     return 12;
+}
+
+inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte value)
+{
+	regA ^= value;
+	setCarryFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	setSubtractFlag(flags, false);
+	setZeroFlag(flags, regA == 0x00);
+	programCounter += 0x01;
+	return 4;
 }
 
 /* Rotation / Shifts */
@@ -163,15 +174,20 @@ inline cycle RLA(address &programCounter, byte &flags, byte &regA)
     return 4;
 }
 
-/* Jumpers :) */
+/* Jumpers */
+inline cycle JP(Memory &memory, address &programCounter)
+{
+	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x02), memory.read(programCounter + 0x01));
+	return 16;
+}
 
 /* Flag getters and setters */
-static inline bool getCarryFlag(byte &flags)
+inline bool getCarryFlag(byte &flags)
 {
     return (flags & 0x10) == 0x10;
 }
 
-static inline void setCarryFlag(byte &flags, const bool on)
+inline void setCarryFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -183,7 +199,7 @@ static inline void setCarryFlag(byte &flags, const bool on)
     }
 }
 
-static inline void setHalfCarryFlag(byte &flags, const bool on)
+inline void setHalfCarryFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -195,7 +211,7 @@ static inline void setHalfCarryFlag(byte &flags, const bool on)
     }
 }
 
-static inline void setSubtractFlag(byte &flags, const bool on)
+inline void setSubtractFlag(byte &flags, const bool on)
 {
     if(on)
     {
@@ -207,7 +223,7 @@ static inline void setSubtractFlag(byte &flags, const bool on)
     }
 }
 
-static inline void setZeroFlag(byte &flags, const bool on)
+inline void setZeroFlag(byte &flags, const bool on)
 {
     if(on)
     {

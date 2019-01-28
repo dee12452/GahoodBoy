@@ -47,6 +47,8 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD(memory, registers.programCounter, registers.B);
         case 0x07: // RLCA
             return RLCA(registers.programCounter, registers.flags, registers.A);
+		case 0x0e: // LD C, d8
+			return LD(memory, registers.programCounter, registers.C);
         case 0x11: // LD DE,d16
             return LD16(memory, registers.programCounter, registers.D, registers.E);
         case 0x12: // LD (DE),A
@@ -85,6 +87,10 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return DEC(memory, registers.programCounter, registers.flags, registers.H, registers.L);
         case 0x36: // LD (HL),d8
             return LD(memory, registers.programCounter, registers.H, registers.L);
+		case 0xAF: // XOR A
+			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
+		case 0xC3:  // JP a16
+			return JP(memory, registers.programCounter);
         default:
             Gahood::log("CPU encountered unknown op-code %x at %x", nextOpCode & 0xFF, registers.programCounter & 0xFFFF);
             break;
