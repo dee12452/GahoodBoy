@@ -3,5 +3,5 @@
 
 int main(int argc, char **argv)
 {
-    Emulator::run(argc, argv);
+    return Emulator::run(argc, argv);
 }

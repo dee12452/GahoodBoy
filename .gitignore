@@ -5,3 +5,6 @@ CMakeCache.txt
 cmake_install.cmake
 GahoodBoy
 .vscode/
+.vs/
+lib/
+include/

@@ -24,7 +24,7 @@ Cartridge::Cartridge(const Cartridge &other)
         Gahood::criticalError("Cartridge size is less than expected, it is likely corrupted.");
     }
     cartridgeMemory = (byte *) malloc(sizeof(byte) * cartridgeMemorySize);
-    for(size_t i = 0; i < cartridgeMemorySize; i++)
+    for(size i = 0; i < cartridgeMemorySize; i++)
     {
         cartridgeMemory[i] = other.cartridgeMemory[i];
     }
@@ -50,7 +50,7 @@ Cartridge& Cartridge::operator=(const Cartridge &other)
         free(romName);
     }
     cartridgeMemory = (byte *) malloc(sizeof(byte) * cartridgeMemorySize);
-    for(size_t i = 0; i < cartridgeMemorySize; i++)
+    for(size i = 0; i < cartridgeMemorySize; i++)
     {
         cartridgeMemory[i] = other.cartridgeMemory[i];
     }
@@ -84,7 +84,7 @@ byte * Cartridge::getCartridgeMemory() const
     return cartridgeMemory;
 }
 
-size_t Cartridge::getCartridgeMemorySize() const
+size Cartridge::getCartridgeMemorySize() const
 {
     return cartridgeMemorySize;
 }
@@ -102,7 +102,7 @@ bool Cartridge::isSgbEnabled() const
 static char * readRomName(byte *cartridgeMemory)
 {
     char *romName = (char *) malloc(sizeof(char) * 17);
-    size_t index = 0;
+    size index = 0;
     for(address addr = 0x0134; addr < 0x0143; addr += 0x01, index++)
     {
         romName[index] = cartridgeMemory[addr];

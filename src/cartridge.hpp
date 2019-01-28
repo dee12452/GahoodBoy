@@ -13,13 +13,13 @@ class Cartridge
 
         char * getRomName() const;
         byte * getCartridgeMemory() const;
-        size_t getCartridgeMemorySize() const;
+        size getCartridgeMemorySize() const;
         bool isCgbEnabled() const;
         bool isSgbEnabled() const;
 
     private:
         byte *cartridgeMemory;
-        size_t cartridgeMemorySize;
+        size cartridgeMemorySize;
         char *romName;
         bool cgb;
         bool sgb;
