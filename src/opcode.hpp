@@ -8,12 +8,19 @@ inline void setCarryFlag(byte &flags, const bool on);
 inline void setHalfCarryFlag(byte &flags, const bool on);
 inline void setSubtractFlag(byte &flags, const bool on);
 inline void setZeroFlag(byte &flags, const bool on);
+inline bool getZeroFlag(byte &flags);
 
 /* Control Instructions */
 inline cycle NOP(address &programCounter)
 {
     programCounter += 0x01;
     return 4;
+}
+
+inline cycle DI(address &programCounter) // TODO: DISABLE INTERRUPTS
+{
+	programCounter += 0x01;
+	return 4;
 }
 
 /* Load, store, move */
@@ -71,6 +78,20 @@ inline cycle LD16(Memory &memory, address &programCounter, address &stackPointer
     stackPointer = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter + 0x02));
     programCounter += 0x03;
     return 12;
+}
+
+inline cycle LDH(Memory &memory, address &programCounter, byte &regA)
+{
+	memory.write(Gahood::addressFromBytes(0xFF, memory.read(programCounter + 0x01)), regA);
+	programCounter += 0x02;
+	return 12;
+}
+
+inline cycle LDH(address &programCounter, byte &regA, const byte value)
+{
+	regA = value;
+	programCounter += 0x02;
+	return 12;
 }
 
 /* Arithmetic */
@@ -181,6 +202,20 @@ inline cycle JP(Memory &memory, address &programCounter)
 	return 16;
 }
 
+inline cycle JR(Memory &memory, address &programCounter, byte &flags)
+{
+	if (getZeroFlag(flags))
+	{
+		programCounter += static_cast<signed char> (memory.read(programCounter + 0x01));
+		return 12;
+	}
+	else
+	{
+		programCounter += 0x02;
+		return 8;
+	}
+}
+
 /* Flag getters and setters */
 inline bool getCarryFlag(byte &flags)
 {
@@ -233,6 +268,11 @@ inline void setZeroFlag(byte &flags, const bool on)
     {
         flags &= 0x70;
     }
+}
+
+inline bool getZeroFlag(byte &flags)
+{
+	return (flags & 0x80) == 0x80;
 }
 
 #endif

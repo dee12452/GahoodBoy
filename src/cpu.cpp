@@ -47,7 +47,9 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD(memory, registers.programCounter, registers.B);
         case 0x07: // RLCA
             return RLCA(registers.programCounter, registers.flags, registers.A);
-		case 0x0e: // LD C, d8
+		case 0x0D: // DEC C
+			return DEC(registers.programCounter, registers.flags, registers.C);
+		case 0x0E: // LD C, d8
 			return LD(memory, registers.programCounter, registers.C);
         case 0x11: // LD DE,d16
             return LD16(memory, registers.programCounter, registers.D, registers.E);
@@ -63,6 +65,10 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD(memory, registers.programCounter, registers.D);
         case 0x17: // RLA
             return RLA(registers.programCounter, registers.flags, registers.A);
+		case 0x1E: // LD E,d8
+			return LD(memory, registers.programCounter, registers.E);
+		case 0x20: // JR NZ,r8
+			return JR(memory, registers.programCounter, registers.flags);
         case 0x21: // LD HL,d16
             return LD16(memory, registers.programCounter, registers.H, registers.L);
         case 0x22: // LD (HL+),A
@@ -75,6 +81,8 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return DEC(registers.programCounter, registers.flags, registers.H);
         case 0x26: // LD H,d8
             return LD(memory, registers.programCounter, registers.H);
+		case 0x2E: // LD L,d8
+			return LD(memory, registers.programCounter, registers.L);
         case 0x31: // LD SP,d16
             return LD16(memory, registers.programCounter, registers.stackPointer);
         case 0x32: // LD (HL-),A
@@ -87,10 +95,18 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return DEC(memory, registers.programCounter, registers.flags, registers.H, registers.L);
         case 0x36: // LD (HL),d8
             return LD(memory, registers.programCounter, registers.H, registers.L);
+		case 0x3E: // LD A,d8
+			return LD(memory, registers.programCounter, registers.A);
 		case 0xAF: // XOR A
 			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
+		case 0xE0: // LDH (a8),A
+			return LDH(memory, registers.programCounter, registers.A);
+		case 0xF0: // LDH A,(a8)
+			return LDH(registers.programCounter, registers.A, memory.read(registers.programCounter + 0x01));
+		case 0xF3: // DI
+			return DI(registers.programCounter);
         default:
             Gahood::log("CPU encountered unknown op-code %x at %x", nextOpCode & 0xFF, registers.programCounter & 0xFFFF);
             break;
