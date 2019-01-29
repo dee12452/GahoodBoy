@@ -45,26 +45,6 @@ inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, con
     return 12;
 }
 
-inline cycle LD(Memory &memory, address &programCounter, byte &regHigh, byte &regLow, const byte value, const bool increment, const bool decrement, const bool fromRegister)
-{
-    address writeAddr = Gahood::addressFromBytes(regHigh, regLow);
-    memory.write(writeAddr, value);
-    if(increment)
-    {
-        writeAddr += 0x01;
-        regHigh = static_cast<byte> (writeAddr >> 8);
-        regLow = static_cast<byte> (writeAddr & 0x00FF);
-    }
-    else if(decrement)
-    {
-        writeAddr -= 0x01;
-        regHigh = static_cast<byte> (writeAddr >> 8);
-        regLow = static_cast<byte> (writeAddr & 0x00FF);
-    }
-    programCounter += fromRegister ? 0x01 : 0x02;
-    return fromRegister ? 8 : 12;
-}
-
 inline cycle LD16(Memory &memory, address &programCounter, byte &regHigh, byte &regLow)
 {
     regHigh = memory.read(programCounter + 0x01);
@@ -188,6 +168,38 @@ inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte va
 	setZeroFlag(flags, regA == 0x00);
 	programCounter += 0x01;
 	return 4;
+}
+
+inline cycle CP(address &programCounter, byte &flags, const byte regA, const byte cpValue)
+{
+	setZeroFlag(flags, regA == cpValue);
+	setSubtractFlag(flags, true);
+	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
+	setCarryFlag(flags, regA < cpValue);
+	programCounter += 0x01;
+	return 4;
+}
+
+inline cycle CP(Memory &memory, address &programCounter, byte &flags, const byte regA)
+{
+	const byte cpValue = memory.read(programCounter + 0x01);
+	setZeroFlag(flags, regA == cpValue);
+	setSubtractFlag(flags, true);
+	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
+	setCarryFlag(flags, regA < cpValue);
+	programCounter += 0x02;
+	return 8;
+}
+
+inline cycle CP(Memory &memory, address &programCounter, byte &flags, const byte regA, const byte regHigh, const byte regLow)
+{
+	const byte cpValue = memory.read(Gahood::addressFromBytes(regHigh, regLow));
+	setZeroFlag(flags, regA == cpValue);
+	setSubtractFlag(flags, true);
+	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
+	setCarryFlag(flags, regA < cpValue);
+	programCounter += 0x01;
+	return 8;
 }
 
 /* Rotation / Shifts */

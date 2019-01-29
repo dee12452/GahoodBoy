@@ -36,7 +36,11 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
         case 0x01: // LD BC,d16
             return LD16(memory, registers.programCounter, registers.B, registers.C);
         case 0x02: // LD (BC),A
-            return LD(memory, registers.programCounter, registers.B, registers.C, registers.A, false, false, true);
+		{
+			memory.write(Gahood::addressFromBytes(registers.B, registers.C), registers.A);
+			registers.programCounter += 0x01;
+			return 8;
+		}
         case 0x03: // INC BC
             return INC16(registers.programCounter, registers.B, registers.C);
         case 0x04: // INC B
@@ -51,6 +55,12 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD16(memory, registers.programCounter, registers.stackPointer, false);
         case 0x09: // ADD HL,BC
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.B, registers.C);
+		case 0x0A: // LD A,(BC)
+		{
+			registers.A = memory.read(Gahood::addressFromBytes(registers.B, registers.C));
+			registers.programCounter += 0x01;
+			return 8;
+		}
 		case 0x0D: // DEC C
 			return DEC(registers.programCounter, registers.flags, registers.C);
 		case 0x0E: // LD C, d8
@@ -58,7 +68,11 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
         case 0x11: // LD DE,d16
             return LD16(memory, registers.programCounter, registers.D, registers.E);
         case 0x12: // LD (DE),A
-            return LD(memory, registers.programCounter, registers.D, registers.E, registers.A, false, false, true);
+		{
+			memory.write(Gahood::addressFromBytes(registers.D, registers.E), registers.A);
+			registers.programCounter += 0x01;
+			return 8;
+		}
         case 0x13: // INC DE
             return INC16(registers.programCounter, registers.D, registers.E);
         case 0x14: // INC D
@@ -71,6 +85,12 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return RLA(registers.programCounter, registers.flags, registers.A);
         case 0x19: // ADD HL,DE
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.D, registers.E);
+		case 0x1A: // LD A,(DE)
+		{
+			registers.A = memory.read(Gahood::addressFromBytes(registers.D, registers.E));
+			registers.programCounter += 0x01;
+			return 8;
+		}
 		case 0x1E: // LD E,d8
 			return LD(memory, registers.programCounter, registers.E);
 		case 0x20: // JR NZ,r8
@@ -78,7 +98,14 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
         case 0x21: // LD HL,d16
             return LD16(memory, registers.programCounter, registers.H, registers.L);
         case 0x22: // LD (HL+),A
-            return LD(memory, registers.programCounter, registers.H, registers.L, registers.A, true, false, true);
+		{
+			const address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L) + 0x01;
+			memory.write(addrToWrite, registers.A);
+			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
+			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
+			registers.programCounter += 0x01;
+			return 8;
+		}
         case 0x23: // INC DE
             return INC16(registers.programCounter, registers.H, registers.L);
         case 0x24: // INC H
@@ -89,12 +116,28 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD(memory, registers.programCounter, registers.H);
         case 0x29: // ADD HL,HL
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.H, registers.L);
+		case 0x2A: // LD A,(HL+)
+		{
+			const address addrToRead = Gahood::addressFromBytes(registers.H, registers.L) + 0x01;
+			registers.A = memory.read(addrToRead);
+			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
+			registers.L = static_cast<byte> (addrToRead & 0x00FF);
+			registers.programCounter += 0x01;
+			return 8;
+		}
 		case 0x2E: // LD L,d8
 			return LD(memory, registers.programCounter, registers.L);
         case 0x31: // LD SP,d16
             return LD16(memory, registers.programCounter, registers.stackPointer, true);
         case 0x32: // LD (HL-),A
-            return LD(memory, registers.programCounter, registers.H, registers.L, registers.A, false, true, true);
+		{
+			const address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L) - 0x01;
+			memory.write(addrToWrite, registers.A);
+			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
+			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
+			registers.programCounter += 0x01;
+			return 8;
+		}
         case 0x33: // INC SP
             return INC16(registers.programCounter, registers.stackPointer);
         case 0x34: // INC (HL)
@@ -105,18 +148,45 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             return LD(memory, registers.programCounter, registers.H, registers.L);
         case 0x39: // ADD HL,SP
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, static_cast<byte> (registers.stackPointer >> 8), static_cast<byte> (registers.stackPointer & 0x00FF));
+		case 0x3A: // LD A,(HL-)
+		{
+			const address addrToRead = Gahood::addressFromBytes(registers.H, registers.L) - 0x01;
+			registers.A = memory.read(addrToRead);
+			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
+			registers.L = static_cast<byte> (addrToRead & 0x00FF);
+			registers.programCounter += 0x01;
+			return 8;
+		}
 		case 0x3E: // LD A,d8
 			return LD(memory, registers.programCounter, registers.A);
 		case 0xAF: // XOR A
 			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
+		case 0xBE: // CP (HL)
+			return CP(memory, registers.programCounter, registers.flags, registers.A, registers.H, registers.L);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
 		case 0xE0: // LDH (a8),A
 			return LDH(memory, registers.programCounter, registers.A);
+		case 0xEA: // LD (a16),A
+		{
+			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x02), memory.read(registers.programCounter + 0x01));
+			memory.write(addrToWrite, registers.A);
+			registers.programCounter += 0x03;
+			return 16;
+		}
 		case 0xF0: // LDH A,(a8)
 			return LDH(registers.programCounter, registers.A, memory.read(registers.programCounter + 0x01));
+		case 0xFA: // LD A,(a16)
+		{
+			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x02), memory.read(registers.programCounter + 0x01));
+			registers.A = memory.read(addrToRead);
+			registers.programCounter += 0x03;
+			return 16;
+		}
 		case 0xF3: // DI
 			return DI(registers.programCounter);
+		case 0xFE: // CP d8
+			return CP(memory, registers.programCounter, registers.flags, registers.A);
         default:
             Gahood::log("CPU encountered unknown op-code %x at %x", nextOpCode & 0xFF, registers.programCounter & 0xFFFF);
             break;

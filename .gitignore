@@ -2,6 +2,7 @@ rom/
 Makefile
 CMakeFiles/
 CMakeCache.txt
+CMakeSettings.json
 cmake_install.cmake
 GahoodBoy
 .vscode/
