@@ -148,6 +148,15 @@ inline cycle DEC(Memory &memory, address &programCounter, byte &flags, const byt
     return 12;
 }
 
+inline cycle DEC16(address &programCounter, byte &regHigh, byte &regLow)
+{
+	const address value = Gahood::addressFromBytes(regHigh, regLow) - 0x01;
+	regHigh = static_cast<byte> ((value & 0xFF00) >> 8);
+	regLow = static_cast<byte> (value & 0x00FF);
+	programCounter += 0x01;
+	return 8;
+}
+
 inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
 {
     setHalfCarryFlag(flags, (regLow & 0x0F) + (addLow & 0x0F) > 0x0F);
@@ -157,6 +166,17 @@ inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &re
     regLow = static_cast<byte> (sum & 0x00FF);
     regHigh = static_cast<byte> (sum >> 8);
     return 8;
+}
+
+inline cycle OR(address &programCounter, byte &flags, byte &regA, const byte reg)
+{
+	regA |= reg;
+	setZeroFlag(flags, (regA == 0x00));
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	setCarryFlag(flags, false);
+	programCounter += 0x01;
+	return 4;
 }
 
 inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte value)
@@ -248,6 +268,23 @@ inline cycle JR(Memory &memory, address &programCounter, byte &flags)
 		programCounter += 0x02;
 		return 8;
 	}
+}
+
+inline cycle CALL(Memory &memory, address & programCounter, address &stackPointer)
+{
+	stackPointer -= 0x01;
+	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
+	stackPointer -= 0x01;
+	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
+	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x02), memory.read(programCounter + 0x01));
+	return 12;
+}
+
+inline cycle RET(Memory &memory, address & programCounter, address &stackPointer)
+{
+	programCounter = Gahood::addressFromBytes(memory.read(stackPointer + 0x02), memory.read(stackPointer + 0x01));
+	stackPointer += 0x02;
+	return 16;
 }
 
 /* Flag getters and setters */

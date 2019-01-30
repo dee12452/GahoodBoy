@@ -61,6 +61,8 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.programCounter += 0x01;
 			return 8;
 		}
+		case 0x0B: // DEC BC
+			return DEC16(registers.programCounter, registers.B, registers.C);
 		case 0x0C: // INC C
 			return INC(registers.programCounter, registers.flags, registers.C);
 		case 0x0D: // DEC C
@@ -93,6 +95,8 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.programCounter += 0x01;
 			return 8;
 		}
+		case 0x1B: // DEC DE
+			return DEC16(registers.programCounter, registers.D, registers.E);
 		case 0x1C: // INC E
 			return INC(registers.programCounter, registers.flags, registers.E);
 		case 0x1D: // DEC E
@@ -131,6 +135,8 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.programCounter += 0x01;
 			return 8;
 		}
+		case 0x2B: // DEC HL
+			return DEC16(registers.programCounter, registers.H, registers.L);
 		case 0x2C: // INC L
 			return INC(registers.programCounter, registers.flags, registers.L);
 		case 0x2D: // DEC L
@@ -167,18 +173,32 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.programCounter += 0x01;
 			return 8;
 		}
+		case 0x3B: // DEC SP
+		{
+			registers.stackPointer -= 0x01;
+			registers.programCounter += 0x01;
+			return 8;
+		}
 		case 0x3C: // INC A
 			return INC(registers.programCounter, registers.flags, registers.A);
 		case 0x3D: // DEC A
 			return DEC(registers.programCounter, registers.flags, registers.A);
 		case 0x3E: // LD A,d8
 			return LD(memory, registers.programCounter, registers.A);
+		case 0x78: // LD A,B
+			return LD(registers.programCounter, registers.A, registers.B);
 		case 0xAF: // XOR A
 			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
+		case 0xB1: // OR C
+			return OR(registers.programCounter, registers.flags, registers.A, registers.C);
 		case 0xBE: // CP (HL)
 			return CP(memory, registers.programCounter, registers.flags, registers.A, registers.H, registers.L);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
+		case 0xC9: // RET
+			return RET(memory, registers.programCounter, registers.stackPointer);
+		case 0xCD: // CALL a16
+			return CALL(memory, registers.programCounter, registers.stackPointer);
 		case 0xE0: // LDH (a8),A
 			return LDH(memory, registers.programCounter, registers.A);
 		case 0xE2: // LD (C),A

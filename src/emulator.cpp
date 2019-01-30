@@ -1,6 +1,7 @@
 #include "emulator.hpp"
 
 #include "cpu.hpp"
+#include "video.hpp"
 
 static void init();
 static void quit();
@@ -15,13 +16,15 @@ int Emulator::run(int argc, char **argv)
     }
     Gahood::log( "Loading ROM %s", argv[1]);
 
+	Cpu cpu;
+	Video video;
     Cartridge cartridge(argv[1]);
     Memory memory(cartridge);
 
-    Cpu cpu;
     while(cpu.process(memory))
     {
         // Update emulator
+		video.render(memory);
     }
 
     quit();
