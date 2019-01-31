@@ -2,6 +2,7 @@
 
 #include "cpu.hpp"
 #include "video.hpp"
+#include "io.hpp"
 
 static void init();
 static void quit();
@@ -16,18 +17,21 @@ int Emulator::run(int argc, char **argv)
     }
     Gahood::log( "Loading ROM %s", argv[1]);
 
+	Cartridge cartridge(argv[1]);
+	Memory memory(cartridge);
+
 	Cpu cpu;
 	Video video;
-    Cartridge cartridge(argv[1]);
-    Memory memory(cartridge);
+	IO io;
 
-    while(cpu.process(memory))
+    while(cpu.process(memory) && io.update(memory))
     {
-        // Update emulator
 		video.render(memory);
     }
 
     quit();
+
+	Gahood::log("Quitting emulator");
 
 	return 0;
 }
