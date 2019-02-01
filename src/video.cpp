@@ -1,4 +1,5 @@
 #include "video.hpp"
+#include <stdio.h>
 
 typedef unsigned char BitNumber;
 
@@ -78,8 +79,42 @@ void Video::refresh(Memory &memory)
 	objPallette1 = memory.read(0xFF49);
 }
 
-void Video::draw(Memory &)
+void Video::draw(Memory &memory)
 {
+	byte bgTileNums[32][32];
+	address start, end;
+	if(lcdBgTileMapDisplaySelect) // 9C00-9FFF
+	{
+		start = 0x9C00;
+		end = 0x9FFF;
+	}
+	else // 9800-9BFF
+	{
+		start = 0x9800;
+		end = 0x9BFF;
+	}
+	byte row = 0, col = 0;
+	address addr;
+	for(addr = start; addr <= end; addr += 0x01)
+	{
+		if(col != 0 && col % 32 == 0)
+		{
+			row++;
+			col = 0;
+		}
+		bgTileNums[row][col] = memory.read(addr);
+		col++;
+	}
+
+	if(lcdWindowBgTileSelect) // $8000-$8FFF
+	{
+
+	}
+	else // $8800-$97FF
+	{
+
+	}
+
 	if (SDL_RenderClear(renderer) < 0)
 	{
 		Gahood::criticalSdlError("Failed to clear the current screen");
