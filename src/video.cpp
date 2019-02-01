@@ -16,6 +16,10 @@ Video::Video()
 	{
 		Gahood::criticalSdlError("Failed to create the window renderer");
 	}
+	if (SDL_RenderSetLogicalSize(renderer, 500, 500) < 0)
+	{
+		Gahood::criticalSdlError("Failed to clip the resolution");
+	}
 }
 
 Video::~Video()
