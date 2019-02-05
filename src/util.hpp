@@ -19,6 +19,7 @@ namespace Gahood
     bool stringLiteralEquals(char *str1, const char *str2);
     address addressFromBytes(const byte highByte, const byte lowByte);
     byte * readFileAsBytes(const char *filePath, size &sizeOfFile);
+    void writeToFile(const char *filePath, const byte *bytesToWrite);
     void log(const char *message, ...);
     void criticalError(const char *message, ...);
     void criticalSdlError(const char *message, ...);

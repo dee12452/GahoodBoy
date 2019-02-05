@@ -74,3 +74,9 @@ void Memory::write(const address addr, const byte byteToWrite)
 		memoryBytes[addr] = byteToWrite;
 	}
 }
+
+void Memory::dumpToFile(const char *filePath) const
+{
+    Gahood::log("Dumping memory to %s", filePath);
+    Gahood::writeToFile(filePath, memoryBytes);
+}

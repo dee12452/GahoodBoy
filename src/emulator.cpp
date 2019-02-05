@@ -11,13 +11,25 @@ int Emulator::run(int argc, char **argv)
 {
     init();
 
-    if(argc != 2)
+    char *romPath = NULL;
+    bool isDebug = false;
+    if(argc == 2)
     {
-        Gahood::criticalError("Invalid arguments passed. You must pass only the path to the ROM");
+        romPath = argv[1];
     }
-    Gahood::log( "Loading ROM %s", argv[1]);
+    else if(argc == 3 && Gahood::stringLiteralEquals(argv[2], "debug"))
+    {
+        romPath = argv[1];
+        isDebug = true;
+    }
+    else
+    {
+        Gahood::criticalError("Invalid arguments passed");
+    }
 
-	Cartridge cartridge(argv[1]);
+    Gahood::log( "Loading ROM %s", romPath);
+
+	Cartridge cartridge(romPath);
 	Memory memory(cartridge);
 
 	Cpu cpu;
@@ -27,6 +39,11 @@ int Emulator::run(int argc, char **argv)
     while(cpu.process(memory) && io.update(memory))
     {
 		video.render(memory);
+    }
+
+    if(isDebug)
+    {
+        memory.dumpToFile("debug/memoryDump.txt");
     }
 
     quit();

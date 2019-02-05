@@ -13,6 +13,7 @@ class Memory
 
         byte read(const address addr) const;
         void write(const address addr, const byte byteToWrite);
+        void dumpToFile(const char *filePath) const;
 
     private:
         byte *memoryBytes;

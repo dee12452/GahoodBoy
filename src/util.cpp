@@ -41,7 +41,7 @@ byte * Gahood::readFileAsBytes(const char *filePath, size &sizeOfFile)
     SDL_RWops *fileCtx = SDL_RWFromFile(filePath, "rb");
     if(!fileCtx)
     {
-        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to read file: %s", SDL_GetError());
+        Gahood::criticalSdlError("Failed to read file: %s");
         exit(EXIT_FAILURE);
     }
 
@@ -59,13 +59,21 @@ byte * Gahood::readFileAsBytes(const char *filePath, size &sizeOfFile)
             byte *tmp = (byte *) realloc(fileBytes, sizeof(byte) * currentMemorySize);
             if(!tmp)
             {
-                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "Failed to allocate memory for file read");
-                exit(EXIT_FAILURE);
+                Gahood::criticalSdlError("Failed to allocate memory for file read");
             }
             fileBytes = tmp;
         }
     }
     return fileBytes;
+}
+
+void Gahood::writeToFile(const char *filePath, const byte *bytesToWrite)
+{
+    SDL_RWops *fileCtx = SDL_RWFromFile(filePath, "wb");
+    if(!fileCtx)
+    {
+        Gahood::criticalSdlError("Failed to write to file: %s", filePath);
+    }
 }
 
 void Gahood::log(const char *message, ...)
