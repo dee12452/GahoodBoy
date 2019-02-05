@@ -12,6 +12,7 @@ Cpu::Cpu()
     registers.L = 0x00;
     registers.stackPointer = GAMEBOY_STACK_POINTER_START;
     registers.programCounter = GAMEBOY_PROGRAM_COUNTER_START;
+	IME = false;
 }
 
 bool Cpu::process(Memory &memory)
@@ -230,7 +231,9 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			return 8;
 		}
 		case 0xF3: // DI
-			return DI(registers.programCounter);
+			return DI(registers.programCounter, IME);
+		case 0xFB: // EI
+			return EI(registers.programCounter, IME);
 		case 0xFE: // CP d8
 			return CP(memory, registers.programCounter, registers.flags, registers.A);
         default:

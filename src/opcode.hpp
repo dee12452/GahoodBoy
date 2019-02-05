@@ -17,8 +17,16 @@ inline cycle NOP(address &programCounter)
     return 4;
 }
 
-inline cycle DI(address &programCounter) // TODO: DISABLE INTERRUPTS
+inline cycle DI(address &programCounter, bool &IME)
 {
+    IME = false;
+	programCounter += 0x01;
+	return 4;
+}
+
+inline cycle EI(address &programCounter, bool &IME)
+{
+    IME = true;
 	programCounter += 0x01;
 	return 4;
 }

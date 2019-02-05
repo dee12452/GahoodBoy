@@ -40,6 +40,7 @@ class Cpu
     
     private:
         Registers registers;
+        bool IME;
 
         cycle processCurrentOpCode(Memory &memory);
         void cycleDelay(const cycle clockCycles) const;
