@@ -72,6 +72,7 @@ void Memory::write(const address addr, const byte byteToWrite)
 	}
 	default:
 		memoryBytes[addr] = byteToWrite;
+        break;
 	}
 }
 
