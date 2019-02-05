@@ -58,7 +58,7 @@ byte Memory::read(const address addr) const
 
 void Memory::write(const address addr, const byte byteToWrite)
 {
-    if(addr >= memorySize)
+    if(addr > memorySize)
     {
         Gahood::criticalError("Attempted to write to memory at out of bounds address %x", addr & 0xFFFF);
     }
