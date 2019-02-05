@@ -64,16 +64,24 @@ byte * Gahood::readFileAsBytes(const char *filePath, size &sizeOfFile)
             fileBytes = tmp;
         }
     }
+    SDL_RWclose(fileCtx);
+
     return fileBytes;
 }
 
-void Gahood::writeToFile(const char *filePath, const byte *bytesToWrite)
+void Gahood::writeToFile(const char *filePath, const byte *bytesToWrite, const size sizeOfBytes)
 {
     SDL_RWops *fileCtx = SDL_RWFromFile(filePath, "wb");
     if(!fileCtx)
     {
-        Gahood::criticalSdlError("Failed to write to file: %s", filePath);
+        Gahood::criticalSdlError("Failed to open file to write to: %s", filePath);
     }
+
+    if(SDL_RWwrite(fileCtx, bytesToWrite, 1, sizeOfBytes) != sizeOfBytes)
+    {
+        Gahood::criticalSdlError("Failed to write to file");
+    }
+    SDL_RWclose(fileCtx);
 }
 
 void Gahood::log(const char *message, ...)

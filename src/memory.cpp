@@ -83,5 +83,5 @@ void Memory::write(const address addr, const byte byteToWrite)
 void Memory::dumpToFile(const char *filePath) const
 {
     Gahood::log("Dumping last memory state to %s", filePath);
-    Gahood::writeToFile(filePath, memoryBytes);
+    Gahood::writeToFile(filePath, memoryBytes, static_cast<size> (memorySize));
 }
