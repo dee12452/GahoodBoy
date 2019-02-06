@@ -216,7 +216,7 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			return 16;
 		}
 		case 0xF0: // LDH A,(a8)
-			return LDH(registers.programCounter, registers.A, memory.read(memory.read(registers.programCounter + 0x01)));
+			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter + 0x01))));
 		case 0xFA: // LD A,(a16)
 		{
 			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x02), memory.read(registers.programCounter + 0x01));

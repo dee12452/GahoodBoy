@@ -268,7 +268,7 @@ inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 {
 	if (condition)
 	{
-		programCounter += static_cast<signed char> (memory.read(programCounter + 0x01));
+		programCounter += 0x01 + static_cast<signed char> (memory.read(programCounter + 0x01));
 		return 12;
 	}
 	else
