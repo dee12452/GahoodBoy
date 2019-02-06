@@ -186,8 +186,160 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			return DEC(registers.programCounter, registers.flags, registers.A);
 		case 0x3E: // LD A,d8
 			return LD(memory, registers.programCounter, registers.A);
+		case 0x40: // LD B,B
+			return LD(registers.programCounter, registers.B, registers.B);
+		case 0x41: // LD B,C
+			return LD(registers.programCounter, registers.B, registers.C);
+		case 0x42: // LD B,D
+			return LD(registers.programCounter, registers.B, registers.D);
+		case 0x43: // LD B,E
+			return LD(registers.programCounter, registers.B, registers.E);
+		case 0x44: // LD B,H
+			return LD(registers.programCounter, registers.B, registers.H);
+		case 0x45: // LD B,L
+			return LD(registers.programCounter, registers.B, registers.L);
+		case 0x46: // LD B,(HL)
+		{
+			registers.B = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x47: // LD B,A
+			return LD(registers.programCounter, registers.C, registers.A);
+		case 0x48: // LD C,B
+			return LD(registers.programCounter, registers.C, registers.B);
+		case 0x49: // LD C,C
+			return LD(registers.programCounter, registers.C, registers.C);
+		case 0x4A: // LD C,D
+			return LD(registers.programCounter, registers.C, registers.D);
+		case 0x4B: // LD C,E
+			return LD(registers.programCounter, registers.C, registers.E);
+		case 0x4C: // LD C,H
+			return LD(registers.programCounter, registers.C, registers.H);
+		case 0x4D: // LD C,L
+			return LD(registers.programCounter, registers.C, registers.L);
+		case 0x4E: // LD C,(HL)
+		{
+			registers.C = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x4F: // LD C,A
+			return LD(registers.programCounter, registers.C, registers.A);
+		case 0x50: // LD D,B
+			return LD(registers.programCounter, registers.D, registers.B);
+		case 0x51: // LD D,C
+			return LD(registers.programCounter, registers.D, registers.C);
+		case 0x52: // LD D,D
+			return LD(registers.programCounter, registers.D, registers.D);
+		case 0x53: // LD D,E
+			return LD(registers.programCounter, registers.D, registers.E);
+		case 0x54: // LD D,H
+			return LD(registers.programCounter, registers.D, registers.H);
+		case 0x55: // LD D,L
+			return LD(registers.programCounter, registers.D, registers.L);
+		case 0x56: // LD D,(HL)
+		{
+			registers.D = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x57: // LD D,A
+			return LD(registers.programCounter, registers.D, registers.A);
+		case 0x58: // LD E,B
+			return LD(registers.programCounter, registers.E, registers.B);
+		case 0x59: // LD E,C
+			return LD(registers.programCounter, registers.E, registers.C);
+		case 0x5A: // LD E,D
+			return LD(registers.programCounter, registers.E, registers.D);
+		case 0x5B: // LD E,E
+			return LD(registers.programCounter, registers.E, registers.E);
+		case 0x5C: // LD E,H
+			return LD(registers.programCounter, registers.E, registers.H);
+		case 0x5D: // LD E,L
+			return LD(registers.programCounter, registers.E, registers.L);
+		case 0x5E: // LD E,(HL)
+		{
+			registers.E = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x5F: // LD E,A
+			return LD(registers.programCounter, registers.E, registers.A);
+		case 0x60: // LD H,B
+			return LD(registers.programCounter, registers.H, registers.B);
+		case 0x61: // LD H,C
+			return LD(registers.programCounter, registers.H, registers.C);
+		case 0x62: // LD H,D
+			return LD(registers.programCounter, registers.H, registers.D);
+		case 0x63: // LD H,E
+			return LD(registers.programCounter, registers.H, registers.E);
+		case 0x64: // LD H,H
+			return LD(registers.programCounter, registers.H, registers.H);
+		case 0x65: // LD H,L
+			return LD(registers.programCounter, registers.H, registers.L);
+		case 0x66: // LD H,(HL)
+		{
+			registers.H = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x67: // LD H,A
+			return LD(registers.programCounter, registers.H, registers.A);
+		case 0x68: // LD L,B
+			return LD(registers.programCounter, registers.L, registers.B);
+		case 0x69: // LD L,C
+			return LD(registers.programCounter, registers.L, registers.C);
+		case 0x6A: // LD L,D
+			return LD(registers.programCounter, registers.L, registers.D);
+		case 0x6B: // LD L,E
+			return LD(registers.programCounter, registers.L, registers.E);
+		case 0x6C: // LD L,H
+			return LD(registers.programCounter, registers.L, registers.H);
+		case 0x6D: // LD L,L
+			return LD(registers.programCounter, registers.L, registers.L);
+		case 0x6E: // LD L,(HL)
+		{
+			registers.L = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x6F: // LD L,A
+			return LD(registers.programCounter, registers.L, registers.A);
+		case 0x70: // LD (HL),B
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.B);
+		case 0x71: // LD (HL),C
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.C);
+		case 0x72: // LD (HL),D
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.D);
+		case 0x73: // LD (HL),E
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.E);
+		case 0x74: // LD (HL),H
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.H);
+		case 0x75: // LD (HL),L
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.L);
+		case 0x77: // LD (HL),A
+			return LD(memory, registers.programCounter, registers.H, registers.L, registers.A);
 		case 0x78: // LD A,B
 			return LD(registers.programCounter, registers.A, registers.B);
+		case 0x79: // LD A,C
+			return LD(registers.programCounter, registers.A, registers.C);
+		case 0x7A: // LD A,D
+			return LD(registers.programCounter, registers.A, registers.D);
+		case 0x7B: // LD A,E
+			return LD(registers.programCounter, registers.A, registers.E);
+		case 0x7C: // LD A,H
+			return LD(registers.programCounter, registers.A, registers.H);
+		case 0x7D: // LD A,L
+			return LD(registers.programCounter, registers.A, registers.L);
+		case 0x7E: // LD A,(HL)
+		{
+			registers.A = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+			registers.programCounter += 0x01;
+			return 8;
+		}
+		case 0x7F: // LD A,A
+			return LD(registers.programCounter, registers.A, registers.A);
 		case 0xAF: // XOR A
 			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
 		case 0xB1: // OR C
