@@ -136,7 +136,7 @@ inline cycle INC16(address &programCounter, address &stackPointer)
 inline cycle DEC(address &programCounter, byte &flags, byte &reg)
 {
     setHalfCarryFlag(flags, (reg & 0x0F) == 0x00);
-    reg -= 0x01;
+    reg = Gahood::sub(reg, 0x01);
     setSubtractFlag(flags, true);
     setZeroFlag(flags, reg == 0x00);
     programCounter += 0x01;
@@ -148,7 +148,7 @@ inline cycle DEC(Memory &memory, address &programCounter, byte &flags, const byt
     const address addr = Gahood::addressFromBytes(regHigh, regLow);
     byte byteToDec = memory.read(addr);
     setHalfCarryFlag(flags, (byteToDec & 0x0F) == 0x00);
-    byteToDec -= 0x01;
+    byteToDec = Gahood::sub(byteToDec, 0x01);
     setSubtractFlag(flags, true);
     setZeroFlag(flags, byteToDec == 0x00);
     memory.write(addr, byteToDec);
@@ -158,7 +158,7 @@ inline cycle DEC(Memory &memory, address &programCounter, byte &flags, const byt
 
 inline cycle DEC16(address &programCounter, byte &regHigh, byte &regLow)
 {
-	const address value = Gahood::addressFromBytes(regHigh, regLow) - 0x01;
+	const address value = Gahood::sub(Gahood::addressFromBytes(regHigh, regLow), 0x01);
 	regHigh = static_cast<byte> ((value & 0xFF00) >> 8);
 	regLow = static_cast<byte> (value & 0x00FF);
 	programCounter += 0x01;
@@ -264,9 +264,9 @@ inline cycle JP(Memory &memory, address &programCounter)
 	return 16;
 }
 
-inline cycle JR(Memory &memory, address &programCounter, byte &flags)
+inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 {
-	if (getZeroFlag(flags))
+	if (condition)
 	{
 		programCounter += static_cast<signed char> (memory.read(programCounter + 0x01));
 		return 12;
@@ -280,9 +280,9 @@ inline cycle JR(Memory &memory, address &programCounter, byte &flags)
 
 inline cycle CALL(Memory &memory, address & programCounter, address &stackPointer)
 {
-	stackPointer -= 0x01;
+	stackPointer = Gahood::sub(stackPointer, 0x01);
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
-	stackPointer -= 0x01;
+	stackPointer = Gahood::sub(stackPointer, 0x01);
 	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
 	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x02), memory.read(programCounter + 0x01));
 	return 12;

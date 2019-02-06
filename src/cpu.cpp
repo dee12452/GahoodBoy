@@ -105,7 +105,7 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x1E: // LD E,d8
 			return LD(memory, registers.programCounter, registers.E);
 		case 0x20: // JR NZ,r8
-			return JR(memory, registers.programCounter, registers.flags);
+			return JR(memory, registers.programCounter, !getZeroFlag(registers.flags));
         case 0x21: // LD HL,d16
             return LD16(memory, registers.programCounter, registers.H, registers.L);
         case 0x22: // LD (HL+),A
