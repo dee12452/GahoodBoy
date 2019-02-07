@@ -1,4 +1,5 @@
 #include "util.hpp"
+#include <sys/time.h>
 
 bool Gahood::stringEquals(char *str1, char *str2)
 {
@@ -157,4 +158,16 @@ address Gahood::add(const address addr1, const address addr2)
     {
         return addr1 + addr2;
     }
+}
+
+microseconds Gahood::getCurrentMicroseconds()
+{
+    timeval tv;
+    gettimeofday(&tv,NULL);
+    return tv.tv_sec * static_cast<microseconds> (1000000) + tv.tv_usec;
+}
+
+milliseconds Gahood::getCurrentMilliseconds()
+{
+    return SDL_GetTicks();
 }

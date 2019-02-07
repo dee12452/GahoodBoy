@@ -12,6 +12,8 @@ typedef short int cycle;
 typedef unsigned char byte;
 typedef unsigned short int address;
 typedef unsigned long size;
+typedef unsigned long long microseconds;
+typedef unsigned int milliseconds;
 
 namespace Gahood 
 {
@@ -27,6 +29,8 @@ namespace Gahood
     byte add(const byte byte1, const byte byte2);
     address sub(const address addr1, const address addr2);
     address add(const address addr1, const address addr2);
+    microseconds getCurrentMicroseconds();
+    milliseconds getCurrentMilliseconds();
 }
 
 #endif

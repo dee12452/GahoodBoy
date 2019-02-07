@@ -2,6 +2,7 @@
 #define _GAHOOD_BOY_VIDEO_HPP_
 
 #include "memory.hpp"
+#include "timer.hpp"
 
 class Video
 {
