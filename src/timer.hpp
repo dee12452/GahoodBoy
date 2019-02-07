@@ -9,14 +9,14 @@ public:
     Timer();
 
     void reset();
-    milliseconds getElapsedMilliseconds() const;
+    milliseconds getElapsedMilliseconds();
     milliseconds getElapsedMillisecondsAndReset();
-    microseconds getElapsedMicroseconds() const;
+    microseconds getElapsedMicroseconds();
     microseconds getElapsedMicrosecondsAndReset();
 
 private:
-    milliseconds milliS;
-    microseconds microS;
+    milliseconds milliStart, milliEnd;
+    microseconds microStart, microEnd;
 };
 
 #endif

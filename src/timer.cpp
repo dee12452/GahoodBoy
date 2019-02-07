@@ -7,13 +7,20 @@ Timer::Timer()
 
 void Timer::reset()
 {
-    milliS = 0;
-    microS = 0;
+    milliStart = Gahood::getCurrentMilliseconds();
+    milliEnd = milliStart;
+    microStart = Gahood::getCurrentMicroseconds();
+    microEnd = microStart;
 }
 
-milliseconds Timer::getElapsedMilliseconds() const
+milliseconds Timer::getElapsedMilliseconds()
 {
-    return Gahood::getCurrentMilliseconds() - milliS;
+    milliEnd = Gahood::getCurrentMilliseconds();
+    if(milliEnd < milliStart) // In case of overflow
+    {
+        reset();
+    }
+    return milliEnd - milliStart;
 }
 
 milliseconds Timer::getElapsedMillisecondsAndReset()
@@ -23,9 +30,14 @@ milliseconds Timer::getElapsedMillisecondsAndReset()
     return elapsed;
 }
 
-microseconds Timer::getElapsedMicroseconds() const
+microseconds Timer::getElapsedMicroseconds()
 {
-    return Gahood::getCurrentMicroseconds() - microS;
+    microEnd = Gahood::getCurrentMicroseconds();
+    if(microEnd < microStart) // In case of overflow
+    {
+        reset();
+    }
+    return microEnd - microStart;
 }
 
 microseconds Timer::getElapsedMicrosecondsAndReset()
