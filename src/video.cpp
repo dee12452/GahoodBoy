@@ -81,6 +81,25 @@ void Video::refresh(Memory &memory)
 	bgPallette = memory.read(0xFF47);
 	objPallette0 = memory.read(0xFF48);
 	objPallette1 = memory.read(0xFF49);
+
+	const byte lcdStatus = memory.read(0xFF41);
+	if(lYCoord == lYCompare)
+	{
+		memory.write(0xFF41, lcdStatus | 0x04);
+	}
+	else
+	{
+		memory.write(0xFF41, lcdStatus & 0xFB);
+	}
+	
+	if(lYCoord == static_cast<byte> (144))
+	{
+		memory.write(0xFF41, lcdStatus | 0x01);	
+	}
+	else if(lYCoord == 0)
+	{
+		memory.write(0xFF41, lcdStatus & 0xFE);
+	}
 }
 
 void Video::draw(Memory &memory)
@@ -118,6 +137,17 @@ void Video::draw(Memory &memory)
 	{
 
 	}
+
+	// Update LY
+	if(lYCoord != static_cast<byte> (153))
+	{
+		memory.write(0xFF44, lYCoord + 1);
+	}
+	else
+	{
+		memory.write(0xFF44, 0);
+	}
+	
 
 	if (SDL_RenderClear(renderer) < 0)
 	{
