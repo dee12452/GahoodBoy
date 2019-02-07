@@ -53,6 +53,13 @@ inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, con
     return 12;
 }
 
+inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, const byte regLow, const byte value)
+{
+	memory.write(Gahood::addressFromBytes(regHigh, regLow), value);
+	programCounter += 0x01;
+	return 8;
+}
+
 inline cycle LD16(Memory &memory, address &programCounter, byte &regHigh, byte &regLow)
 {
     regHigh = memory.read(programCounter + 0x01);
@@ -268,7 +275,7 @@ inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 {
 	if (condition)
 	{
-		programCounter += 0x01 + static_cast<signed char> (memory.read(programCounter + 0x01));
+		programCounter += static_cast<signed char> (memory.read(programCounter + 0x01));
 		return 12;
 	}
 	else
