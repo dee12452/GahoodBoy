@@ -76,7 +76,7 @@ void Memory::write(const address addr, const byte byteToWrite)
 	}
     case 0xFF41: // LCD status register; bit 0-2 are Read Only
     {
-        if(byteToWrite & 0x07 == 0x07)
+        if((byteToWrite & 0x07) == 0x07)
         {
             Gahood::criticalError("Address %x: Tried writing %x to Read Only bits", addr, byteToWrite);
         }
