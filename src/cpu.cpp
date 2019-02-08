@@ -30,6 +30,7 @@ bool Cpu::process(Memory &memory)
 cycle Cpu::processCurrentOpCode(Memory &memory)
 {
     const byte nextOpCode = memory.read(registers.programCounter);
+	registers.programCounter += 0x01;
     switch(nextOpCode)
     {
         case 0x00: // NOP
@@ -39,7 +40,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
         case 0x02: // LD (BC),A
 		{
 			memory.write(Gahood::addressFromBytes(registers.B, registers.C), registers.A);
-			registers.programCounter += 0x01;
 			return 8;
 		}
         case 0x03: // INC BC
@@ -59,7 +59,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x0A: // LD A,(BC)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(registers.B, registers.C));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x0B: // DEC BC
@@ -75,7 +74,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
         case 0x12: // LD (DE),A
 		{
 			memory.write(Gahood::addressFromBytes(registers.D, registers.E), registers.A);
-			registers.programCounter += 0x01;
 			return 8;
 		}
         case 0x13: // INC DE
@@ -93,7 +91,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x1A: // LD A,(DE)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(registers.D, registers.E));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x1B: // DEC DE
@@ -114,7 +111,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			memory.write(addrToWrite, registers.A);
 			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
-			registers.programCounter += 0x01;
 			return 8;
 		}
         case 0x23: // INC DE
@@ -133,7 +129,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.A = memory.read(addrToRead);
 			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x2B: // DEC HL
@@ -152,7 +147,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			memory.write(addrToWrite, registers.A);
 			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
-			registers.programCounter += 0x01;
 			return 8;
 		}
         case 0x33: // INC SP
@@ -171,13 +165,11 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 			registers.A = memory.read(addrToRead);
 			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x3B: // DEC SP
 		{
 			registers.stackPointer -= 0x01;
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x3C: // INC A
@@ -201,7 +193,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x46: // LD B,(HL)
 		{
 			registers.B = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x47: // LD B,A
@@ -221,7 +212,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x4E: // LD C,(HL)
 		{
 			registers.C = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x4F: // LD C,A
@@ -241,7 +231,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x56: // LD D,(HL)
 		{
 			registers.D = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x57: // LD D,A
@@ -261,7 +250,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x5E: // LD E,(HL)
 		{
 			registers.E = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x5F: // LD E,A
@@ -281,7 +269,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x66: // LD H,(HL)
 		{
 			registers.H = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x67: // LD H,A
@@ -301,7 +288,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x6E: // LD L,(HL)
 		{
 			registers.L = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x6F: // LD L,A
@@ -335,7 +321,6 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0x7E: // LD A,(HL)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0x7F: // LD A,A
@@ -357,29 +342,27 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
 		case 0xE2: // LD (C),A
 		{
 			memory.write(Gahood::addressFromBytes(0xFF, registers.C), registers.A);
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0xEA: // LD (a16),A
 		{
-			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x02), memory.read(registers.programCounter + 0x01));
+			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
 			memory.write(addrToWrite, registers.A);
-			registers.programCounter += 0x03;
+			registers.programCounter += 0x02;
 			return 16;
 		}
 		case 0xF0: // LDH A,(a8)
-			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter + 0x01))));
+			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter))));
 		case 0xFA: // LD A,(a16)
 		{
-			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x02), memory.read(registers.programCounter + 0x01));
+			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
 			registers.A = memory.read(addrToRead);
-			registers.programCounter += 0x03;
+			registers.programCounter += 0x02;
 			return 16;
 		}
 		case 0xF2: // LD A,(C)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(0xFF, registers.C));
-			registers.programCounter += 0x01;
 			return 8;
 		}
 		case 0xF3: // DI

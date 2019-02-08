@@ -13,21 +13,18 @@ inline bool getZeroFlag(byte &flags);
 /* Control Instructions */
 inline cycle NOP(address &programCounter)
 {
-    programCounter += 0x01;
     return 4;
 }
 
 inline cycle DI(address &programCounter, bool &IME)
 {
     IME = false;
-	programCounter += 0x01;
 	return 4;
 }
 
 inline cycle EI(address &programCounter, bool &IME)
 {
     IME = true;
-	programCounter += 0x01;
 	return 4;
 }
 
@@ -35,36 +32,34 @@ inline cycle EI(address &programCounter, bool &IME)
 inline cycle LD(address &programCounter, byte &reg1, const byte reg2)
 {
     reg1 = reg2;
-    programCounter += 0x01;
     return 4;
 }
 
 inline cycle LD(Memory &memory, address &programCounter, byte &reg1)
 {
-    reg1 = memory.read(programCounter + 0x01);
-    programCounter += 0x02;
+    reg1 = memory.read(programCounter);
+    programCounter += 0x01;
     return 8;
 }
 
 inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, const byte regLow)
 {
-    memory.write(Gahood::addressFromBytes(regHigh, regLow), memory.read(programCounter + 0x01));
-    programCounter += 0x02;
+    memory.write(Gahood::addressFromBytes(regHigh, regLow), memory.read(programCounter));
+    programCounter += 0x01;
     return 12;
 }
 
 inline cycle LD(Memory &memory, address &programCounter, const byte regHigh, const byte regLow, const byte value)
 {
 	memory.write(Gahood::addressFromBytes(regHigh, regLow), value);
-	programCounter += 0x01;
 	return 8;
 }
 
 inline cycle LD16(Memory &memory, address &programCounter, byte &regHigh, byte &regLow)
 {
     regHigh = memory.read(programCounter + 0x01);
-    regLow = memory.read(programCounter + 0x02);
-    programCounter += 0x03;
+    regLow = memory.read(programCounter);
+    programCounter += 0x02;
     return 12;
 }
 
@@ -72,31 +67,31 @@ inline cycle LD16(Memory &memory, address &programCounter, address &stackPointer
 {
     if(intoStackPointer)
     {
-        stackPointer = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter + 0x02));
-        programCounter += 0x03;
+        stackPointer = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
+        programCounter += 0x02;
         return 12;
     }
     else
     {
-        const address addrToPut = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter + 0x02));
+        const address addrToPut = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
         memory.write(addrToPut, static_cast<byte> (stackPointer >> 8));
         memory.write(addrToPut + 0x01, static_cast<byte> (stackPointer & 0x0F));
-        programCounter += 0x03;
+        programCounter += 0x02;
         return 20;
     }
 }
 
 inline cycle LDH(Memory &memory, address &programCounter, byte &regA)
 {
-	memory.write(Gahood::addressFromBytes(0xFF, memory.read(programCounter + 0x01)), regA);
-	programCounter += 0x02;
+	memory.write(Gahood::addressFromBytes(0xFF, memory.read(programCounter)), regA);
+	programCounter += 0x01;
 	return 12;
 }
 
 inline cycle LDH(address &programCounter, byte &regA, const byte value)
 {
 	regA = value;
-	programCounter += 0x02;
+	programCounter += 0x01;
 	return 12;
 }
 
@@ -107,7 +102,6 @@ inline cycle INC(address &programCounter, byte &flags, byte &reg)
     reg += 0x01;
     setSubtractFlag(flags, false);
     setZeroFlag(flags, reg == 0x00);
-    programCounter += 0x01;
     return 4;
 }
 
@@ -120,7 +114,6 @@ inline cycle INC(Memory &memory, address &programCounter, byte &flags, const byt
     setSubtractFlag(flags, false);
     setZeroFlag(flags, byteToInc == 0x00);
     memory.write(addr, byteToInc);
-    programCounter += 0x01;
     return 12;
 }
 
@@ -129,14 +122,12 @@ inline cycle INC16(address &programCounter, byte &regHigh, byte &regLow)
     const address addr = Gahood::addressFromBytes(regHigh, regLow) + 0x01;
     regHigh = static_cast<byte> (addr >> 8);
     regLow = static_cast<byte> (addr & 0x00FF);
-    programCounter += 0x01;
     return 8;
 }
 
 inline cycle INC16(address &programCounter, address &stackPointer)
 {
     stackPointer += 0x01;
-    programCounter += 0x01;
     return 8;
 }
 
@@ -146,7 +137,6 @@ inline cycle DEC(address &programCounter, byte &flags, byte &reg)
     reg = Gahood::sub(reg, 0x01);
     setSubtractFlag(flags, true);
     setZeroFlag(flags, reg == 0x00);
-    programCounter += 0x01;
     return 4;
 }
 
@@ -159,7 +149,6 @@ inline cycle DEC(Memory &memory, address &programCounter, byte &flags, const byt
     setSubtractFlag(flags, true);
     setZeroFlag(flags, byteToDec == 0x00);
     memory.write(addr, byteToDec);
-    programCounter += 0x01;
     return 12;
 }
 
@@ -168,7 +157,6 @@ inline cycle DEC16(address &programCounter, byte &regHigh, byte &regLow)
 	const address value = Gahood::sub(Gahood::addressFromBytes(regHigh, regLow), 0x01);
 	regHigh = static_cast<byte> ((value & 0xFF00) >> 8);
 	regLow = static_cast<byte> (value & 0x00FF);
-	programCounter += 0x01;
 	return 8;
 }
 
@@ -190,7 +178,6 @@ inline cycle OR(address &programCounter, byte &flags, byte &regA, const byte reg
 	setSubtractFlag(flags, false);
 	setHalfCarryFlag(flags, false);
 	setCarryFlag(flags, false);
-	programCounter += 0x01;
 	return 4;
 }
 
@@ -201,7 +188,6 @@ inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte va
 	setHalfCarryFlag(flags, false);
 	setSubtractFlag(flags, false);
 	setZeroFlag(flags, regA == 0x00);
-	programCounter += 0x01;
 	return 4;
 }
 
@@ -211,18 +197,17 @@ inline cycle CP(address &programCounter, byte &flags, const byte regA, const byt
 	setSubtractFlag(flags, true);
 	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
 	setCarryFlag(flags, regA < cpValue);
-	programCounter += 0x01;
 	return 4;
 }
 
 inline cycle CP(Memory &memory, address &programCounter, byte &flags, const byte regA)
 {
-	const byte cpValue = memory.read(programCounter + 0x01);
+	const byte cpValue = memory.read(programCounter);
 	setZeroFlag(flags, regA == cpValue);
 	setSubtractFlag(flags, true);
 	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
 	setCarryFlag(flags, regA < cpValue);
-	programCounter += 0x02;
+	programCounter += 0x01;
 	return 8;
 }
 
@@ -233,7 +218,6 @@ inline cycle CP(Memory &memory, address &programCounter, byte &flags, const byte
 	setSubtractFlag(flags, true);
 	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
 	setCarryFlag(flags, regA < cpValue);
-	programCounter += 0x01;
 	return 8;
 }
 
@@ -247,7 +231,6 @@ inline cycle RLCA(address &programCounter, byte &flags, byte &regA)
     setZeroFlag(flags, false);
     setSubtractFlag(flags, false);
     setHalfCarryFlag(flags, false);
-    programCounter += 0x01;
     return 4;
 }
 
@@ -260,14 +243,13 @@ inline cycle RLA(address &programCounter, byte &flags, byte &regA)
     setZeroFlag(flags, false);
     setSubtractFlag(flags, false);
     setHalfCarryFlag(flags, false);
-    programCounter += 0x01;
     return 4;
 }
 
 /* Jumpers */
 inline cycle JP(Memory &memory, address &programCounter)
 {
-	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x02), memory.read(programCounter + 0x01));
+	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
 	return 16;
 }
 
@@ -275,12 +257,12 @@ inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 {
 	if (condition)
 	{
-		programCounter += static_cast<signed char> (memory.read(programCounter + 0x01));
+		programCounter += static_cast<signed char> (memory.read(programCounter)) + 0x01;
 		return 12;
 	}
 	else
 	{
-		programCounter += 0x02;
+		programCounter += 0x01;
 		return 8;
 	}
 }
@@ -291,7 +273,7 @@ inline cycle CALL(Memory &memory, address & programCounter, address &stackPointe
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
 	stackPointer = Gahood::sub(stackPointer, 0x01);
 	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
-	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x02), memory.read(programCounter + 0x01));
+	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
 	return 12;
 }
 

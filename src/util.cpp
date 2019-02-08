@@ -1,5 +1,10 @@
 #include "util.hpp"
+
+#ifdef WIN32
+#include <Windows.h>
+#else
 #include <sys/time.h>
+#endif
 
 bool Gahood::stringEquals(char *str1, char *str2)
 {
@@ -160,11 +165,37 @@ address Gahood::add(const address addr1, const address addr2)
     }
 }
 
+/*
+* Windows version of gettimeofday
+* Copied directly from https://stackoverflow.com/questions/10905892/equivalent-of-gettimeday-for-windows (Thanks Michaelangel007!)
+*/
+#ifdef WIN32
+static void gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+	// Note: some broken versions only have 8 trailing zero's, the correct epoch has 9 trailing zero's
+	// This magic number is the number of 100 nanosecond intervals since January 1, 1601 (UTC)
+	// until 00:00:00 January 1, 1970 
+	static const unsigned long long EPOCH = ((unsigned long long) 116444736000000000ULL);
+
+	SYSTEMTIME system_time;
+	FILETIME file_time;
+	unsigned long long time;
+
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((unsigned long long)file_time.dwLowDateTime);
+	time += ((unsigned long long)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+}
+#endif
+
 microseconds Gahood::getCurrentMicroseconds()
 {
-    timeval tv;
-    gettimeofday(&tv,NULL);
-    return tv.tv_sec * static_cast<microseconds> (1000000) + tv.tv_usec;
+	timeval tv;
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec * static_cast<microseconds> (1000000) + tv.tv_usec;
 }
 
 milliseconds Gahood::getCurrentMilliseconds()
