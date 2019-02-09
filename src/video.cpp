@@ -21,8 +21,6 @@ Video::Video(Memory &memory)
 		Gahood::criticalSdlError("Failed to clip the resolution");
 	}
 
-	lcdStatus = 0x02;
-	memory.write(0xFF41, lcdStatus); // Start emulator with lcd status mode 2
 	clockCycles = 0;
 }
 
@@ -87,14 +85,6 @@ void Video::refresh(Memory &memory)
 	objPallette1 = memory.read(0xFF49);
 
 	lcdStatus = memory.read(0xFF41);
-	if(lYCoord == lYCompare)
-	{
-		memory.write(0xFF41, lcdStatus | 0x04);
-	}
-	else
-	{
-		memory.write(0xFF41, lcdStatus & 0xFB);
-	}
 }
 
 void Video::draw(Memory &memory)
@@ -118,6 +108,16 @@ void Video::draw(Memory &memory)
 			{
 				memory.write(0xFF44, lYCoord + 1);
 				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
+
+				// LYC Coincidence Flag
+				if (lYCoord == lYCompare)
+				{
+					memory.write(0xFF41, lcdStatus | 0x04);
+				}
+				else
+				{
+					memory.write(0xFF41, lcdStatus & 0xFB);
+				}
 			}
 		}
 		else
@@ -148,6 +148,16 @@ void Video::draw(Memory &memory)
 			if (clockCycles % (77 / (153 - 144))) // Increment lY every so often to 153
 			{
 				memory.write(0xFF44, lYCoord + 1);
+
+				// LYC Coincidence Flag
+				if (lYCoord == lYCompare)
+				{
+					memory.write(0xFF41, lcdStatus | 0x04);
+				}
+				else
+				{
+					memory.write(0xFF41, lcdStatus & 0xFB);
+				}
 			}
 			clockCycles++;
 		}
