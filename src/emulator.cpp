@@ -33,7 +33,7 @@ int Emulator::run(int argc, char **argv)
 	Memory memory(cartridge);
 
 	Cpu cpu;
-	Video video;
+	Video video(memory);
 	IO io;
 
     while(cpu.process(memory) && io.update(memory))

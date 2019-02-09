@@ -3,7 +3,7 @@
 
 typedef unsigned char BitNumber;
 
-Video::Video()
+Video::Video(Memory &memory)
 {
 	window = SDL_CreateWindow("GahoodBoy", 100, 100, 500, 500, SDL_WINDOW_OPENGL);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
@@ -20,6 +20,10 @@ Video::Video()
 	{
 		Gahood::criticalSdlError("Failed to clip the resolution");
 	}
+
+	lcdStatus = 0x02;
+	memory.write(0xFF41, lcdStatus); // Start emulator with lcd status mode 2
+	clockCycles = 0;
 }
 
 Video::~Video()
@@ -82,7 +86,7 @@ void Video::refresh(Memory &memory)
 	objPallette0 = memory.read(0xFF48);
 	objPallette1 = memory.read(0xFF49);
 
-	const byte lcdStatus = memory.read(0xFF41);
+	lcdStatus = memory.read(0xFF41);
 	if(lYCoord == lYCompare)
 	{
 		memory.write(0xFF41, lcdStatus | 0x04);
@@ -91,19 +95,78 @@ void Video::refresh(Memory &memory)
 	{
 		memory.write(0xFF41, lcdStatus & 0xFB);
 	}
-	
-	if(lYCoord == static_cast<byte> (144))
-	{
-		memory.write(0xFF41, lcdStatus | 0x01);	
-	}
-	else if(lYCoord == 0)
-	{
-		memory.write(0xFF41, lcdStatus & 0xFE);
-	}
 }
 
 void Video::draw(Memory &memory)
 {
+	if (!lcdEnabled)
+	{
+		return;
+	}
+
+	switch (lcdStatus & 0x03)
+	{
+	case 0x00: // H-Blank 201-207 clks
+		if (clockCycles == 201)
+		{
+			clockCycles = 0;
+			if (lYCoord == static_cast<byte> (144))
+			{
+				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x01);
+			}
+			else
+			{
+				memory.write(0xFF44, lYCoord + 1);
+				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
+			}
+		}
+		else
+		{
+			clockCycles++;
+		}
+		break;
+	case 0x01: // V-Blank 456 clks
+		if (clockCycles == 456)
+		{
+			clockCycles = 0;
+			memory.write(0xFF44, 0);
+			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
+		}
+		else
+		{
+			clockCycles++;
+		}
+		break;
+	case 0x02: // OAM-RAM Search 77-83 clks
+		if (lYCoord == 153)
+		{
+			clockCycles = 0;
+			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x03);
+		}
+		else
+		{
+			if (clockCycles % (77 / (153 - 144))) // Increment lY every so often to 153
+			{
+				memory.write(0xFF44, lYCoord + 1);
+			}
+			clockCycles++;
+		}
+		break;
+	case 0x03: // LCD Driver Transfer 169-175 clks
+		if (clockCycles == 169)
+		{
+			clockCycles = 0;
+			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x00);
+		}
+		else
+		{
+			clockCycles++;
+		}
+		break;
+	default:
+		Gahood::criticalError("Undefined LCD mode %x", lcdStatus & 0x03);
+	}
+
 	byte bgTileNums[32][32];
 	address start, end;
 	if(lcdBgTileMapDisplaySelect) // 9C00-9FFF
@@ -137,17 +200,6 @@ void Video::draw(Memory &memory)
 	{
 
 	}
-
-	// Update LY
-	if(lYCoord != static_cast<byte> (153))
-	{
-		memory.write(0xFF44, lYCoord + 1);
-	}
-	else
-	{
-		memory.write(0xFF44, 0);
-	}
-	
 
 	if (SDL_RenderClear(renderer) < 0)
 	{

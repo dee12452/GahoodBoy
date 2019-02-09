@@ -7,7 +7,7 @@
 class Video
 {
 public:
-	Video();
+	Video(Memory &memory);
 	~Video();
 
 	void render(Memory &memory);
@@ -34,6 +34,9 @@ private:
 	byte bgPallette;
 	byte objPallette0;
 	byte objPallette1;
+	byte lcdStatus;
+
+	cycle clockCycles;
 
 	void refresh(Memory &memory);
 	void draw(Memory &memory);
