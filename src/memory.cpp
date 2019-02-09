@@ -4,7 +4,7 @@ Memory::Memory(const Cartridge &cartridge)
 {
     memorySize = 0xFFFF;
     memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
-    for(address i = 0x0000; i < memorySize; i += 0x0001)
+    for(address i = 0x0000; i <= memorySize; i += 0x0001)
     {
         if(i <= 0x8000)
         {
