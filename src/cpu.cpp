@@ -313,6 +313,44 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0x7F: // LD A,A
 			return LD(registers.programCounter, registers.A, registers.A);
+		case 0x80: // ADD A,B
+			return ADD(registers.flags, registers.A, registers.B);
+		case 0x81: // ADD A,C
+			return ADD(registers.flags, registers.A, registers.C);
+		case 0x82: // ADD A,D
+			return ADD(registers.flags, registers.A, registers.D);
+		case 0x83: // ADD A,E
+			return ADD(registers.flags, registers.A, registers.E);
+		case 0x84: // ADD A,H
+			return ADD(registers.flags, registers.A, registers.H);
+		case 0x85: // ADD A,L
+			return ADD(registers.flags, registers.A, registers.L);
+		case 0x86: // ADD A,(HL)
+		{
+			registers.programCounter += 0x01;
+			return ADD(registers.flags, registers.A, memory.read(registers.programCounter - 0x01)) * 2;
+		}
+		case 0x87: // ADD A,A
+			return ADC(registers.flags, registers.A, registers.A);
+		case 0x88: // ADC A,B
+			return ADC(registers.flags, registers.A, registers.B);
+		case 0x89: // ADC A,C
+			return ADC(registers.flags, registers.A, registers.C);
+		case 0x8A: // ADC A,D
+			return ADC(registers.flags, registers.A, registers.D);
+		case 0x8B: // ADC A,E
+			return ADC(registers.flags, registers.A, registers.E);
+		case 0x8C: // ADC A,H
+			return ADC(registers.flags, registers.A, registers.H);
+		case 0x8D: // ADC A,L
+			return ADC(registers.flags, registers.A, registers.L);
+		case 0x8E: // ADC A,(HL)
+		{
+			registers.programCounter += 0x01;
+			return ADC(registers.flags, registers.A, memory.read(registers.programCounter - 0x01)) * 2;
+		}
+		case 0x8F: // ADC A,A
+			return ADC(registers.flags, registers.A, registers.A);
 		case 0xAF: // XOR A
 			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
 		case 0xB1: // OR C

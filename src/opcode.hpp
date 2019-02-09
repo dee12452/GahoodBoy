@@ -160,6 +160,32 @@ inline cycle DEC16(address &programCounter, byte &regHigh, byte &regLow)
 	return 8;
 }
 
+inline cycle ADD(byte &flags, byte &reg1, const byte reg2)
+{
+	setHalfCarryFlag(flags, (((reg1 & 0x0F) + (reg2 & 0x0F)) & 0x10) == 0x10);
+	setCarryFlag(flags, (0xFF - reg1) < reg2);
+
+	reg1 = Gahood::add(reg1, reg2);
+	setZeroFlag(flags, reg1 == 0x00);
+	setSubtractFlag(flags, false);
+
+	return 4;
+}
+
+inline cycle ADC(byte &flags, byte &reg1, const byte reg2)
+{
+	const byte carry = getCarryFlag(flags) ? 0x01 : 0x00;
+	setHalfCarryFlag(flags, (((reg1 & 0x0F) + (reg2 & 0x0F) + carry) & 0x10) == 0x10);
+	setCarryFlag(flags, (0xFF - reg1) < (reg2 + carry));
+	reg1 = Gahood::add(reg1, reg2);
+	reg1 = Gahood::add(reg1, carry);
+
+	setZeroFlag(flags, reg1 == 0x00);
+	setSubtractFlag(flags, false);
+
+	return 4;
+}
+
 inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
 {
     setHalfCarryFlag(flags, (regLow & 0x0F) + (addLow & 0x0F) > 0x0F);
