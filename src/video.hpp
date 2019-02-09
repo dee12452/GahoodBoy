@@ -36,7 +36,7 @@ private:
 	byte objPallette1;
 	byte lcdStatus;
 
-	cycle clockCycles;
+	Timer clockTimer;
 
 	void refresh(Memory &memory);
 	void draw(Memory &memory);

@@ -21,7 +21,7 @@ Video::Video(Memory &memory)
 		Gahood::criticalSdlError("Failed to clip the resolution");
 	}
 
-	clockCycles = 0;
+	clockTimer.reset();
 }
 
 Video::~Video()
@@ -97,9 +97,8 @@ void Video::draw(Memory &memory)
 	switch (lcdStatus & 0x03)
 	{
 	case 0x00: // H-Blank 201-207 clks
-		if (clockCycles == 201)
+		if (clockTimer.getElapsedClocks() >= 201)
 		{
-			clockCycles = 0;
 			if (lYCoord == static_cast<byte> (144))
 			{
 				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x01);
@@ -119,33 +118,30 @@ void Video::draw(Memory &memory)
 					memory.write(0xFF41, lcdStatus & 0xFB);
 				}
 			}
-		}
-		else
-		{
-			clockCycles++;
+			clockTimer.reset();
 		}
 		break;
-	case 0x01: // V-Blank 456 clks
-		if (clockCycles == 456)
+	case 0x01: // V-Blank 4560 clks
+		if (lYCoord == static_cast<byte> (153) && clockTimer.getElapsedClocks() >= 456)
 		{
-			clockCycles = 0;
 			memory.write(0xFF44, 0);
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
+
+			// LYC Coincidence Flag
+			if (0 == lYCompare)
+			{
+				memory.write(0xFF41, lcdStatus | 0x04);
+			}
+			else
+			{
+				memory.write(0xFF41, lcdStatus & 0xFB);
+			}
+
+			clockTimer.reset();
 		}
 		else
 		{
-			clockCycles++;
-		}
-		break;
-	case 0x02: // OAM-RAM Search 77-83 clks
-		if (lYCoord == 153 && clockCycles == 77)
-		{
-			clockCycles = 0;
-			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x03);
-		}
-		else
-		{
-			if (clockCycles % (77 / (153 - 144))) // Increment lY every so often to 153
+			if (clockTimer.getElapsedClocks() >= (4560 - 456) / (153 - 144))
 			{
 				memory.write(0xFF44, lYCoord + 1);
 
@@ -158,19 +154,23 @@ void Video::draw(Memory &memory)
 				{
 					memory.write(0xFF41, lcdStatus & 0xFB);
 				}
+
+				clockTimer.reset();
 			}
-			clockCycles++;
+		}
+		break;
+	case 0x02: // OAM-RAM Search 77-83 clks
+		if (clockTimer.getElapsedClocks() >= 77)
+		{
+			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x03);
+			clockTimer.reset();
 		}
 		break;
 	case 0x03: // LCD Driver Transfer 169-175 clks
-		if (clockCycles == 169)
+		if (clockTimer.getElapsedClocks() >= 169)
 		{
-			clockCycles = 0;
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x00);
-		}
-		else
-		{
-			clockCycles++;
+			clockTimer.reset();
 		}
 		break;
 	default:

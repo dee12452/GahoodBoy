@@ -3,6 +3,8 @@
 
 #include "util.hpp"
 
+#include <time.h>
+
 class Timer
 {
 public:
@@ -13,10 +15,13 @@ public:
     milliseconds getElapsedMillisecondsAndReset();
     microseconds getElapsedMicroseconds();
     microseconds getElapsedMicrosecondsAndReset();
+	clock_t getElapsedClocks();
+	clock_t getElapsedClocksAndReset();
 
 private:
     milliseconds milliStart, milliEnd;
     microseconds microStart, microEnd;
+	clock_t clockStart, clockEnd;
 };
 
 #endif

@@ -11,6 +11,8 @@ void Timer::reset()
     milliEnd = milliStart;
     microStart = Gahood::getCurrentMicroseconds();
     microEnd = microStart;
+	clockStart = clock();
+	clockEnd = clockStart;
 }
 
 milliseconds Timer::getElapsedMilliseconds()
@@ -45,4 +47,21 @@ microseconds Timer::getElapsedMicrosecondsAndReset()
     const microseconds elapsed = getElapsedMicroseconds();
     reset();
     return elapsed;
+}
+
+clock_t Timer::getElapsedClocks()
+{
+	clockEnd = clock();
+	if (clockEnd < clockStart)
+	{
+		clockStart = clock();
+	}
+	return clockEnd - clockStart;
+}
+
+clock_t Timer::getElapsedClocksAndReset()
+{
+	const clock_t elapsed = getElapsedClocks();
+	reset();
+	return elapsed;
 }
