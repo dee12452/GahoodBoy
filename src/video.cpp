@@ -21,7 +21,7 @@ Video::Video(Memory &memory)
 		Gahood::criticalSdlError("Failed to clip the resolution");
 	}
 
-	clockTimer.reset();
+	currentClocks = 0;
 }
 
 Video::~Video()
@@ -30,10 +30,10 @@ Video::~Video()
 	SDL_DestroyWindow(window);
 }
 
-void Video::render(Memory &memory)
+void Video::render(Memory &memory, const cycle clocks)
 {
 	refresh(memory);
-	draw(memory);
+	draw(memory, clocks);
 }
 
 bool bitOn(const byte checkByte, const BitNumber bitNum)
@@ -87,90 +87,72 @@ void Video::refresh(Memory &memory)
 	lcdStatus = memory.read(0xFF41);
 }
 
-void Video::draw(Memory &memory)
+void Video::draw(Memory &memory, const cycle clocks)
 {
 	if (!lcdEnabled)
 	{
 		return;
 	}
 
+	currentClocks += clocks;
+
+	// LYC Coincidence Flag
+	if (lYCoord == lYCompare)
+	{
+		memory.write(0xFF41, lcdStatus | 0x04);
+	}
+	else
+	{
+		memory.write(0xFF41, lcdStatus & 0xFB);
+	}
+
 	switch (lcdStatus & 0x03)
 	{
 	case 0x00: // H-Blank 201-207 clks
-		if (clockTimer.getElapsedClocks() >= 201)
+		if (currentClocks >= 201)
 		{
-			if (lYCoord == static_cast<byte> (144))
+			if (lYCoord == static_cast<byte> (143))
 			{
 				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x01);
 			}
 			else
 			{
-				memory.write(0xFF44, lYCoord + 1);
 				memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
-
-				// LYC Coincidence Flag
-				if (lYCoord == lYCompare)
-				{
-					memory.write(0xFF41, lcdStatus | 0x04);
-				}
-				else
-				{
-					memory.write(0xFF41, lcdStatus & 0xFB);
-				}
 			}
-			clockTimer.reset();
+			memory.write(0xFF44, lYCoord + 1);
+			currentClocks = 0;
 		}
 		break;
-	case 0x01: // V-Blank 4560 clks
-		if (lYCoord == static_cast<byte> (153) && clockTimer.getElapsedClocks() >= 456)
+	case 0x01: // V-Blank 456 clks
+	{
+		const cycle clocksToPass = 456 / (153 - 144);
+		if (lYCoord == static_cast<byte> (153))
 		{
-			memory.write(0xFF44, 0);
+			if (currentClocks < clocksToPass)
+			{
+				break;
+			}
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x02);
-
-			// LYC Coincidence Flag
-			if (0 == lYCompare)
-			{
-				memory.write(0xFF41, lcdStatus | 0x04);
-			}
-			else
-			{
-				memory.write(0xFF41, lcdStatus & 0xFB);
-			}
-
-			clockTimer.reset();
+			memory.write(0xFF44, 0);
+			currentClocks = 0;
 		}
-		else
+		if (currentClocks >= clocksToPass)
 		{
-			if (clockTimer.getElapsedClocks() >= (4560 - 456) / (153 - 144))
-			{
-				memory.write(0xFF44, lYCoord + 1);
-
-				// LYC Coincidence Flag
-				if (lYCoord == lYCompare)
-				{
-					memory.write(0xFF41, lcdStatus | 0x04);
-				}
-				else
-				{
-					memory.write(0xFF41, lcdStatus & 0xFB);
-				}
-
-				clockTimer.reset();
-			}
+			memory.write(0xFF44, lYCoord + 1);
+			currentClocks = 0;
 		}
 		break;
+	}
 	case 0x02: // OAM-RAM Search 77-83 clks
-		if (clockTimer.getElapsedClocks() >= 77)
+		if (currentClocks >= 77)
 		{
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x03);
-			clockTimer.reset();
 		}
 		break;
 	case 0x03: // LCD Driver Transfer 169-175 clks
-		if (clockTimer.getElapsedClocks() >= 169)
+		if (currentClocks >= 169)
 		{
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x00);
-			clockTimer.reset();
 		}
 		break;
 	default:

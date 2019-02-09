@@ -15,19 +15,7 @@ Cpu::Cpu()
 	IME = false;
 }
 
-bool Cpu::process(Memory &memory)
-{
-    const int opCodeCycleDelay = processCurrentOpCode(memory);
-    
-    if(opCodeCycleDelay >= 0)
-    {
-        cycleDelay(opCodeCycleDelay);
-        return true;
-    }
-    return false;
-}
-
-cycle Cpu::processCurrentOpCode(Memory &memory)
+cycle Cpu::process(Memory &memory)
 {
     const byte nextOpCode = memory.read(registers.programCounter);
 	registers.programCounter += 0x01;
@@ -376,9 +364,4 @@ cycle Cpu::processCurrentOpCode(Memory &memory)
             break;
     }
     return -1;
-}
-
-// TODO: Implement clock cycle accuracy
-void Cpu::cycleDelay(const cycle) const
-{
 }

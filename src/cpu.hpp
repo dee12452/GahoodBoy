@@ -36,14 +36,11 @@ class Cpu
     public:
         Cpu();
 
-        bool process(Memory &memory);
+        cycle process(Memory &memory);
     
     private:
         Registers registers;
         bool IME;
-
-        cycle processCurrentOpCode(Memory &memory);
-        void cycleDelay(const cycle clockCycles) const;
 };
 
 #endif
