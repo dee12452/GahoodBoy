@@ -138,7 +138,7 @@ void Video::draw(Memory &memory)
 		}
 		break;
 	case 0x02: // OAM-RAM Search 77-83 clks
-		if (lYCoord == 153)
+		if (lYCoord == 153 && clockCycles == 77)
 		{
 			clockCycles = 0;
 			memory.write(0xFF41, (lcdStatus & 0xFC) | 0x03);
