@@ -269,10 +269,10 @@ inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 
 inline cycle CALL(Memory &memory, address & programCounter, address &stackPointer)
 {
-	stackPointer = Gahood::sub(stackPointer, 0x01);
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
 	stackPointer = Gahood::sub(stackPointer, 0x01);
 	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
+	stackPointer = Gahood::sub(stackPointer, 0x01);
 	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
 	return 12;
 }
