@@ -4,7 +4,7 @@ Memory::Memory(const Cartridge &cartridge)
 {
     memorySize = 0xFFFF;
     memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
-    for(address i = 0x0000; i <= memorySize; i += 0x0001)
+    for(size i = 0x0000; i <= memorySize; i += 0x0001)
     {
         if(i <= 0x8000)
         {
@@ -21,7 +21,7 @@ Memory::Memory(const Memory &other)
 {
     memorySize = 0xFFFF;
     memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
-    for(address i = 0x0000; i <= memorySize; i += 0x0001)
+    for(size i = 0x0000; i <= memorySize; i += 0x0001)
     {
         memoryBytes[i] = other.memoryBytes[i];
     }
@@ -35,7 +35,7 @@ Memory& Memory::operator=(const Memory &other)
     }
     memorySize = 0xFFFF;
     memoryBytes = (byte *) malloc(sizeof(byte) * (static_cast<unsigned long> (memorySize) + 0x01));
-    for(address i = 0x0000; i <= memorySize; i += 0x0001)
+    for(size i = 0x0000; i <= memorySize; i += 0x0001)
     {
         memoryBytes[i] = other.memoryBytes[i];
     }
@@ -68,7 +68,7 @@ void Memory::write(const address addr, const byte byteToWrite)
 	{
 		const address startAddr = static_cast<address> (byteToWrite << 8);
 		const address endAddr = startAddr + 0x0100;
-		for (address wrAddr = startAddr; wrAddr < endAddr; wrAddr += 0x01)
+		for (size wrAddr = startAddr; wrAddr < endAddr; wrAddr += 0x01)
 		{
 			memoryBytes[(wrAddr & 0x00FF) | 0xFE00] = memoryBytes[wrAddr];
 		}
