@@ -197,7 +197,32 @@ inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &re
     return 8;
 }
 
-inline cycle OR(address &programCounter, byte &flags, byte &regA, const byte reg)
+inline cycle SUB(byte &flags, byte &reg1, const byte reg2)
+{
+	setSubtractFlag(flags, true);
+	setZeroFlag(flags, reg1 <= reg2);
+	setHalfCarryFlag(flags, (reg1 & 0x0F) < (reg2 & 0x0F));
+	setCarryFlag(flags, reg1 < reg2);
+	reg1 = Gahood::sub(reg1, reg2);
+	return 4;
+}
+
+inline cycle SBC(byte &flags, byte &reg1, const byte reg2)
+{
+	return SUB(flags, reg1, reg2 + getCarryFlag(flags) ? 0x01 : 0x00);
+}
+
+inline cycle AND(byte &flags, byte &reg1, const byte reg2)
+{
+	reg1 &= reg2;
+	setCarryFlag(flags, false);
+	setHalfCarryFlag(flags, true);
+	setSubtractFlag(flags, false);
+	setZeroFlag(flags, reg1 == 0x00);
+	return 4;
+}
+
+inline cycle OR(byte &flags, byte &regA, const byte reg)
 {
 	regA |= reg;
 	setZeroFlag(flags, (regA == 0x00));
@@ -207,7 +232,7 @@ inline cycle OR(address &programCounter, byte &flags, byte &regA, const byte reg
 	return 4;
 }
 
-inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte value)
+inline cycle XOR(byte &flags, byte &regA, const byte value)
 {
 	regA ^= value;
 	setCarryFlag(flags, false);
@@ -217,7 +242,7 @@ inline cycle XOR(address &programCounter, byte &flags, byte &regA, const byte va
 	return 4;
 }
 
-inline cycle CP(address &programCounter, byte &flags, const byte regA, const byte cpValue)
+inline cycle CP(byte &flags, const byte regA, const byte cpValue)
 {
 	setZeroFlag(flags, regA == cpValue);
 	setSubtractFlag(flags, true);

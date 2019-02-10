@@ -326,10 +326,7 @@ cycle Cpu::process(Memory &memory)
 		case 0x85: // ADD A,L
 			return ADD(registers.flags, registers.A, registers.L);
 		case 0x86: // ADD A,(HL)
-		{
-			registers.programCounter += 0x01;
-			return ADD(registers.flags, registers.A, memory.read(registers.programCounter - 0x01)) * 2;
-		}
+			return ADD(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
 		case 0x87: // ADD A,A
 			return ADC(registers.flags, registers.A, registers.A);
 		case 0x88: // ADC A,B
@@ -345,18 +342,105 @@ cycle Cpu::process(Memory &memory)
 		case 0x8D: // ADC A,L
 			return ADC(registers.flags, registers.A, registers.L);
 		case 0x8E: // ADC A,(HL)
-		{
-			registers.programCounter += 0x01;
-			return ADC(registers.flags, registers.A, memory.read(registers.programCounter - 0x01)) * 2;
-		}
+			return ADC(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
 		case 0x8F: // ADC A,A
 			return ADC(registers.flags, registers.A, registers.A);
+		case 0x90: // SUB B
+			return SUB(registers.flags, registers.A, registers.B);
+		case 0x91: // SUB C
+			return SUB(registers.flags, registers.A, registers.C);
+		case 0x92: // SUB D
+			return SUB(registers.flags, registers.A, registers.D);
+		case 0x93: // SUB E
+			return SUB(registers.flags, registers.A, registers.E);
+		case 0x94: // SUB H
+			return SUB(registers.flags, registers.A, registers.H);
+		case 0x95: // SUB L
+			return SUB(registers.flags, registers.A, registers.L);
+		case 0x96: // SUB (HL)
+			return SUB(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
+		case 0x97: // SUB A
+			return SUB(registers.flags, registers.A, registers.A);
+		case 0x98: // SBC B
+			return SBC(registers.flags, registers.A, registers.B);
+		case 0x99: // SBC C
+			return SBC(registers.flags, registers.A, registers.C);
+		case 0x9A: // SBC D
+			return SBC(registers.flags, registers.A, registers.D);
+		case 0x9B: // SBC E
+			return SBC(registers.flags, registers.A, registers.E);
+		case 0x9C: // SBC H
+			return SBC(registers.flags, registers.A, registers.H);
+		case 0x9D: // SBC L
+			return SBC(registers.flags, registers.A, registers.L);
+		case 0x9E: // SBC (HL)
+			return SBC(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
+		case 0x9F: // SBC A
+			return SBC(registers.flags, registers.A, registers.A);
+		case 0xA0: // AND B
+			return AND(registers.flags, registers.A, registers.B);
+		case 0xA1: // AND C
+			return AND(registers.flags, registers.A, registers.C);
+		case 0xA2: // AND D
+			return AND(registers.flags, registers.A, registers.D);
+		case 0xA3: // AND E
+			return AND(registers.flags, registers.A, registers.E);
+		case 0xA4: // AND H
+			return AND(registers.flags, registers.A, registers.H);
+		case 0xA5: // AND L
+			return AND(registers.flags, registers.A, registers.L);
+		case 0xA6: // AND (HL)
+			return AND(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
+		case 0xA7: // AND A
+			return AND(registers.flags, registers.A, registers.A);
+		case 0xA8: // XOR B
+			return XOR(registers.flags, registers.A, registers.B);
+		case 0xA9: // XOR C
+			return XOR(registers.flags, registers.A, registers.C);
+		case 0xAA: // XOR D
+			return XOR(registers.flags, registers.A, registers.D);
+		case 0xAB: // XOR E
+			return XOR(registers.flags, registers.A, registers.E);
+		case 0xAC: // XOR H
+			return XOR(registers.flags, registers.A, registers.H);
+		case 0xAD: // XOR L
+			return XOR(registers.flags, registers.A, registers.L);
+		case 0xAE: // XOR (HL)
+			return XOR(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
 		case 0xAF: // XOR A
-			return XOR(registers.programCounter, registers.flags, registers.A, registers.A);
+			return XOR(registers.flags, registers.A, registers.A);
+		case 0xB0: // OR B
+			return OR(registers.flags, registers.A, registers.B);
 		case 0xB1: // OR C
-			return OR(registers.programCounter, registers.flags, registers.A, registers.C);
+			return OR(registers.flags, registers.A, registers.C);
+		case 0xB2: // OR D
+			return OR(registers.flags, registers.A, registers.D);
+		case 0xB3: // OR E
+			return OR(registers.flags, registers.A, registers.E);
+		case 0xB4: // OR H
+			return OR(registers.flags, registers.A, registers.H);
+		case 0xB5: // OR L
+			return OR(registers.flags, registers.A, registers.L);
+		case 0xB6: // OR (HL)
+			return OR(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
+		case 0xB7: // OR A
+			return OR(registers.flags, registers.A, registers.A);
+		case 0xB8: // CP B
+			return CP(registers.flags, registers.A, registers.B);
+		case 0xB9: // CP C
+			return CP(registers.flags, registers.A, registers.C);
+		case 0xBA: // CP D
+			return CP(registers.flags, registers.A, registers.D);
+		case 0xBB: // CP E
+			return CP(registers.flags, registers.A, registers.E);
+		case 0xBC: // CP H
+			return CP(registers.flags, registers.A, registers.H);
+		case 0xBD: // CP L
+			return CP(registers.flags, registers.A, registers.L);
 		case 0xBE: // CP (HL)
 			return CP(memory, registers.programCounter, registers.flags, registers.A, registers.H, registers.L);
+		case 0xBF: // CP A
+			return CP(registers.flags, registers.A, registers.A);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
 		case 0xC9: // RET
