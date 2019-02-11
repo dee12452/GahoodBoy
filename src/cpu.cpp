@@ -1,5 +1,7 @@
 #include "cpu.hpp"
 
+#include "opcode_prefix.hpp"
+
 Cpu::Cpu()
 {
     registers.A = 0x00;
@@ -109,6 +111,8 @@ cycle Cpu::process(Memory &memory)
             return DEC(registers.programCounter, registers.flags, registers.H);
         case 0x26: // LD H,d8
             return LD(memory, registers.programCounter, registers.H);
+		case 0x27: // DAA
+			return DAA(registers.flags, registers.A);
         case 0x29: // ADD HL,HL
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.H, registers.L);
 		case 0x2A: // LD A,(HL+)
@@ -127,6 +131,8 @@ cycle Cpu::process(Memory &memory)
 			return DEC(registers.programCounter, registers.flags, registers.L);
 		case 0x2E: // LD L,d8
 			return LD(memory, registers.programCounter, registers.L);
+		case 0x2F: // CPL
+			return CPL(registers.flags, registers.A);
         case 0x31: // LD SP,d16
             return LD16(memory, registers.programCounter, registers.stackPointer, true);
         case 0x32: // LD (HL-),A
@@ -445,6 +451,11 @@ cycle Cpu::process(Memory &memory)
 			return JP(memory, registers.programCounter);
 		case 0xC9: // RET
 			return RET(memory, registers.programCounter, registers.stackPointer);
+		case 0xCB: // PREFIX CB
+		{
+			const cycle clocks = processPrefix(memory);
+			return clocks < 0 ? -1 : clocks + 0x04;
+		}
 		case 0xCD: // CALL a16
 			return CALL(memory, registers.programCounter, registers.stackPointer);
 		case 0xE0: // LDH (a8),A
@@ -454,6 +465,8 @@ cycle Cpu::process(Memory &memory)
 			memory.write(Gahood::addressFromBytes(0xFF, registers.C), registers.A);
 			return 8;
 		}
+		case 0xE6: // AND d8
+			return AND(memory, registers.programCounter, registers.flags, registers.A);
 		case 0xEA: // LD (a16),A
 		{
 			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
@@ -486,4 +499,143 @@ cycle Cpu::process(Memory &memory)
             break;
     }
     return -1;
+}
+
+cycle Cpu::processPrefix(Memory &memory)
+{
+	const byte nextOpCode = memory.read(registers.programCounter);
+	registers.programCounter += 0x01;
+	switch (nextOpCode)
+	{
+	case 0x00: // RLC B
+		return RLC(registers.flags, registers.B);
+	case 0x01: // RLC C
+		return RLC(registers.flags, registers.C);
+	case 0x02: // RLC D
+		return RLC(registers.flags, registers.D);
+	case 0x03: // RLC E
+		return RLC(registers.flags, registers.E);
+	case 0x04: // RLC H
+		return RLC(registers.flags, registers.H);
+	case 0x05: // RLC L
+		return RLC(registers.flags, registers.L);
+	case 0x06: // RLC (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = RLC(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x07: // RLC A
+		return RRC(registers.flags, registers.A);
+	case 0x08: // RRC B
+		return RRC(registers.flags, registers.B);
+	case 0x09: // RRC C
+		return RRC(registers.flags, registers.C);
+	case 0x0A: // RRC D
+		return RRC(registers.flags, registers.D);
+	case 0x0B: // RRC E
+		return RRC(registers.flags, registers.E);
+	case 0x0C: // RRC H
+		return RRC(registers.flags, registers.H);
+	case 0x0D: // RRC L
+		return RRC(registers.flags, registers.L);
+	case 0x0E: // RRC (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = RRC(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x0F: // RRC A
+		return RRC(registers.flags, registers.A);
+	case 0x10: // RL B
+		return RL(registers.flags, registers.B);
+	case 0x11: // RL C
+		return RL(registers.flags, registers.C);
+	case 0x12: // RL D
+		return RL(registers.flags, registers.D);
+	case 0x13: // RL E
+		return RL(registers.flags, registers.E);
+	case 0x14: // RL H
+		return RL(registers.flags, registers.H);
+	case 0x15: // RL L
+		return RL(registers.flags, registers.L);
+	case 0x16: // RL (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = RL(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x17: // RL A
+		return RL(registers.flags, registers.A);
+	case 0x18: // RR B
+		return RR(registers.flags, registers.B);
+	case 0x19: // RR C
+		return RR(registers.flags, registers.C);
+	case 0x1A: // RR D
+		return RR(registers.flags, registers.D);
+	case 0x1B: // RR E
+		return RR(registers.flags, registers.E);
+	case 0x1C: // RR H
+		return RR(registers.flags, registers.H);
+	case 0x1D: // RR L
+		return RR(registers.flags, registers.L);
+	case 0x1E: // RR (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = RR(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x1F: // RR A
+		return RR(registers.flags, registers.A);
+	case 0x20: // SLA B
+		return SLA(registers.flags, registers.B);
+	case 0x21: // SLA C
+		return SLA(registers.flags, registers.C);
+	case 0x22: // SLA D
+		return SLA(registers.flags, registers.D);
+	case 0x23: // SLA E
+		return SLA(registers.flags, registers.E);
+	case 0x24: // SLA H
+		return SLA(registers.flags, registers.H);
+	case 0x25: // SLA L
+		return SLA(registers.flags, registers.L);
+	case 0x26: // SLA (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = SLA(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x27: // SLA A
+		return SLA(registers.flags, registers.A);
+	case 0x28: // SRA B
+		return SRA(registers.flags, registers.B);
+	case 0x29: // SRA C
+		return SRA(registers.flags, registers.C);
+	case 0x2A: // SRA D
+		return SRA(registers.flags, registers.D);
+	case 0x2B: // SRA E
+		return SRA(registers.flags, registers.E);
+	case 0x2C: // SRA H
+		return SRA(registers.flags, registers.H);
+	case 0x2D: // SRA L
+		return SRA(registers.flags, registers.L);
+	case 0x2E: // SRA (HL)
+	{
+		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
+		const cycle clocks = SLA(registers.flags, value);
+		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
+		return clocks;
+	}
+	case 0x2F: // SRA A
+		return SLA(registers.flags, registers.A);
+	default:
+		Gahood::log("CPU encountered unknown prefix op-code %x at %x", nextOpCode & 0xFF, registers.programCounter & 0xFFFF);
+		break;
+	}
+	return -1;
 }

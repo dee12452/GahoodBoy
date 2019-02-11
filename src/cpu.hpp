@@ -1,7 +1,7 @@
 #ifndef _GAHOOD_BOY_CPU_HPP_
 #define _GAHOOD_BOY_CPU_HPP_
 
-#include "opcode.hpp"
+#include "util.hpp"
 
 typedef struct Registers 
 {
@@ -37,6 +37,7 @@ class Cpu
         Cpu();
 
         cycle process(Memory &memory);
+		cycle processPrefix(Memory &memory);
     
     private:
         Registers registers;

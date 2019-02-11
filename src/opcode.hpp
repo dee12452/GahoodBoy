@@ -3,12 +3,14 @@
 
 #include "memory.hpp"
 
-inline bool getCarryFlag(byte &flags);
+inline bool getCarryFlag(const byte flags);
 inline void setCarryFlag(byte &flags, const bool on);
+inline bool getHalfCarryFlag(const byte flags);
 inline void setHalfCarryFlag(byte &flags, const bool on);
+inline bool getSubtractFlag(const byte flags);
 inline void setSubtractFlag(byte &flags, const bool on);
 inline void setZeroFlag(byte &flags, const bool on);
-inline bool getZeroFlag(byte &flags);
+inline bool getZeroFlag(const byte flags);
 
 /* Control Instructions */
 inline cycle NOP(address &programCounter)
@@ -222,6 +224,13 @@ inline cycle AND(byte &flags, byte &reg1, const byte reg2)
 	return 4;
 }
 
+inline cycle AND(const Memory &memory, address &programCounter, byte &flags, byte &regA)
+{
+	const byte value = memory.read(programCounter);
+	programCounter += 0x01;
+	return AND(flags, regA, value) * 2;
+}
+
 inline cycle OR(byte &flags, byte &regA, const byte reg)
 {
 	regA |= reg;
@@ -270,6 +279,47 @@ inline cycle CP(Memory &memory, address &programCounter, byte &flags, const byte
 	setHalfCarryFlag(flags, (regA & 0x0F) < (cpValue & 0x0F));
 	setCarryFlag(flags, regA < cpValue);
 	return 8;
+}
+
+inline cycle CPL(byte &flags, byte &regA)
+{
+	setSubtractFlag(flags, true);
+	setHalfCarryFlag(flags, true);
+	regA = ~regA;
+	return 4;
+}
+
+inline cycle DAA(byte &flags, byte &regA)
+{
+	if(getSubtractFlag(flags))
+	{
+		if (getHalfCarryFlag(flags) || (regA & 0x0F) > 0x09)
+		{
+			setCarryFlag(flags, regA < 0x06);
+			regA = Gahood::sub(regA, 0x06);
+		}
+		if (getCarryFlag(flags) || (regA & 0xF0) > 0x90)
+		{
+			setCarryFlag(flags, regA < 0x60);
+			regA = Gahood::sub(regA, 0x60);
+		}
+	}
+	else
+	{
+		if (getHalfCarryFlag(flags) || (regA & 0x0F) > 0x09)
+		{
+			setCarryFlag(flags, 0xFF - regA <= 0x06);
+			regA = Gahood::add(regA, 0x06);
+		}
+		if (getCarryFlag(flags) || (regA & 0xF0) > 0x90)
+		{
+			setCarryFlag(flags, 0xFF - regA <= 0x60);
+			regA = Gahood::add(regA, 0x60);
+		}
+	}
+	setZeroFlag(flags, regA == 0x00);
+	setHalfCarryFlag(flags, false);
+	return 4;
 }
 
 /* Rotation / Shifts */
@@ -336,11 +386,6 @@ inline cycle RET(Memory &memory, address & programCounter, address &stackPointer
 }
 
 /* Flag getters and setters */
-inline bool getCarryFlag(byte &flags)
-{
-    return (flags & 0x10) == 0x10;
-}
-
 inline void setCarryFlag(byte &flags, const bool on)
 {
     if(on)
@@ -389,9 +434,24 @@ inline void setZeroFlag(byte &flags, const bool on)
     }
 }
 
-inline bool getZeroFlag(byte &flags)
+inline bool getZeroFlag(const byte flags)
 {
 	return (flags & 0x80) == 0x80;
+}
+
+inline bool getSubtractFlag(const byte flags)
+{
+	return (flags & 0x40) == 0x40;
+}
+
+inline bool getHalfCarryFlag(const byte flags)
+{
+	return (flags & 0x20) == 0x20;
+}
+
+inline bool getCarryFlag(const byte flags)
+{
+	return (flags & 0x10) == 0x10;
 }
 
 #endif
