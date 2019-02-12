@@ -341,7 +341,7 @@ inline cycle DAA(byte &flags, byte &regA)
 }
 
 /* Rotation / Shifts */
-inline cycle RLCA(address &programCounter, byte &flags, byte &regA)
+inline cycle RLA(byte &flags, byte &regA)
 {
     const bool carry = (regA & 0x80) == 0x80;
     regA <<= 1;
@@ -353,7 +353,7 @@ inline cycle RLCA(address &programCounter, byte &flags, byte &regA)
     return 4;
 }
 
-inline cycle RLA(address &programCounter, byte &flags, byte &regA)
+inline cycle RLCA(byte &flags, byte &regA)
 {
     const bool carry = (regA & 0x80) == 0x80;
     regA <<= 1;
@@ -363,6 +363,30 @@ inline cycle RLA(address &programCounter, byte &flags, byte &regA)
     setSubtractFlag(flags, false);
     setHalfCarryFlag(flags, false);
     return 4;
+}
+
+inline cycle RRA(byte &flags, byte &regA)
+{
+	const bool carry = (regA & 0x01) == 0x01;
+	regA >>= 1;
+	regA = carry ? regA | 0x80 : regA;
+	setCarryFlag(flags, carry);
+	setZeroFlag(flags, false);
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	return 4;
+}
+
+inline cycle RRCA(byte &flags, byte &regA)
+{
+	const bool carry = (regA & 0x01) == 0x01;
+	regA >>= 1;
+	regA = getCarryFlag(flags) ? regA | 0x80 : regA;
+	setCarryFlag(flags, carry);
+	setZeroFlag(flags, false);
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	return 4;
 }
 
 /* Jumpers */

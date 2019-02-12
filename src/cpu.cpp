@@ -41,7 +41,7 @@ cycle Cpu::process(Memory &memory)
         case 0x06: // LD B,d8
             return LD(memory, registers.programCounter, registers.B);
         case 0x07: // RLCA
-            return RLCA(registers.programCounter, registers.flags, registers.A);
+            return RLCA(registers.flags, registers.A);
         case 0x08: // LD (a16),SP
             return LD16(memory, registers.programCounter, registers.stackPointer, false);
         case 0x09: // ADD HL,BC
@@ -59,6 +59,8 @@ cycle Cpu::process(Memory &memory)
 			return DEC(registers.programCounter, registers.flags, registers.C);
 		case 0x0E: // LD C, d8
 			return LD(memory, registers.programCounter, registers.C);
+		case 0x0F: // RRCA
+			return RRCA(registers.flags, registers.A);
         case 0x11: // LD DE,d16
             return LD16(memory, registers.programCounter, registers.D, registers.E);
         case 0x12: // LD (DE),A
@@ -75,7 +77,9 @@ cycle Cpu::process(Memory &memory)
         case 0x16: // LD D,d8
             return LD(memory, registers.programCounter, registers.D);
         case 0x17: // RLA
-            return RLA(registers.programCounter, registers.flags, registers.A);
+            return RLA(registers.flags, registers.A);
+		case 0x18: // JR r8
+			return JR(memory, registers.programCounter, true);
         case 0x19: // ADD HL,DE
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.D, registers.E);
 		case 0x1A: // LD A,(DE)
@@ -91,6 +95,8 @@ cycle Cpu::process(Memory &memory)
 			return DEC(registers.programCounter, registers.flags, registers.E);
 		case 0x1E: // LD E,d8
 			return LD(memory, registers.programCounter, registers.E);
+		case 0x1F: // RRA
+			return RRA(registers.flags, registers.A);
 		case 0x20: // JR NZ,r8
 			return JR(memory, registers.programCounter, !getZeroFlag(registers.flags));
         case 0x21: // LD HL,d16
@@ -449,6 +455,14 @@ cycle Cpu::process(Memory &memory)
 			return CP(memory, registers.programCounter, registers.flags, registers.A, registers.H, registers.L);
 		case 0xBF: // CP A
 			return CP(registers.flags, registers.A, registers.A);
+		case 0xC0: // RET NZ
+		{
+			if (!getZeroFlag(registers.flags))
+			{
+				return RET(memory, registers.programCounter, registers.stackPointer) + 4;
+			}
+			return 8;
+		}
 		case 0xC1: // POP BC
 			return POP(memory, registers.stackPointer, registers.B, registers.C);
 		case 0xC3:  // JP a16
@@ -470,16 +484,36 @@ cycle Cpu::process(Memory &memory)
 		case 0xCB: // PREFIX CB
 		{
 			const cycle clocks = processPrefix(memory);
-			return clocks < 0 ? -1 : clocks + 0x04;
+			return clocks < 0 ? -1 : clocks + 4;
 		}
 		case 0xCD: // CALL a16
 			return CALL(memory, registers.programCounter, registers.stackPointer);
+		case 0xCE: // ADC A,d8
+		{
+			const byte value = memory.read(registers.programCounter);
+			registers.programCounter += 0x01;
+			return ADC(registers.flags, registers.A, value);
+		}
 		case 0xCF: // RST 08
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x08);
+		case 0xD0: // RET NC
+		{
+			if (!getCarryFlag(registers.flags))
+			{
+				return RET(memory, registers.programCounter, registers.stackPointer) + 4;
+			}
+			return 8;
+		}
 		case 0xD1: // POP DE
 			return POP(memory, registers.stackPointer, registers.D, registers.E);
 		case 0xD5: // PUSH DE
 			return PUSH(memory, registers.stackPointer, registers.D, registers.E);
+		case 0xD6: // SUB d8
+		{
+			const byte value = memory.read(registers.programCounter);
+			registers.programCounter += 0x01;
+			return SUB(registers.flags, registers.A, value) * 2;
+		}
 		case 0xD7: // RST 10
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x10);
 		case 0xDF: // RST 18

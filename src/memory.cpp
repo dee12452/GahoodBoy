@@ -62,6 +62,10 @@ void Memory::write(const address addr, const byte byteToWrite)
     {
         Gahood::criticalError("Attempted to write to memory at out of bounds address %x", addr & 0xFFFF);
     }
+	if (addr < 8000)
+	{
+		Gahood::log("Attempted to write to memory at Cartridge ROM area %x", addr & 0xFFFF);
+	}
 	switch (addr)
 	{
 	case 0xFF46: // LCD OAM DMA Transfers
