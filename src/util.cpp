@@ -202,3 +202,29 @@ milliseconds Gahood::getCurrentMilliseconds()
 {
     return SDL_GetTicks();
 }
+
+bool Gahood::bitOn(const byte checkByte, const BitNumber bitNum)
+{
+	switch (bitNum)
+	{
+	case 0:
+		return (checkByte & 0x01) == 0x01;
+	case 1:
+		return (checkByte & 0x02) == 0x02;
+	case 2:
+		return (checkByte & 0x04) == 0x04;
+	case 3:
+		return (checkByte & 0x08) == 0x08;
+	case 4:
+		return (checkByte & 0x10) == 0x10;
+	case 5:
+		return (checkByte & 0x20) == 0x20;
+	case 6:
+		return (checkByte & 0x40) == 0x40;
+	case 7:
+		return (checkByte & 0x80) == 0x80;
+	default:
+		Gahood::log("Warning: check byte reached unexpected value %x", checkByte & 0xFF);
+		return false;
+	}
+}

@@ -14,6 +14,7 @@ typedef unsigned short int address;
 typedef unsigned long size;
 typedef unsigned long long microseconds;
 typedef unsigned int milliseconds;
+typedef unsigned char BitNumber;
 
 namespace Gahood 
 {
@@ -31,6 +32,7 @@ namespace Gahood
     address add(const address addr1, const address addr2);
     microseconds getCurrentMicroseconds();
     milliseconds getCurrentMilliseconds();
+	bool bitOn(const byte checkByte, const BitNumber bitNum);
 }
 
 #endif
