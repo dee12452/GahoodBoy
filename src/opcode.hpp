@@ -97,6 +97,24 @@ inline cycle LDH(address &programCounter, byte &regA, const byte value)
 	return 12;
 }
 
+inline cycle POP(const Memory &memory, address &stackPointer, byte &highReg, byte &lowReg)
+{
+	stackPointer += 0x01;
+	lowReg = memory.read(stackPointer);
+	stackPointer += 0x01;
+	highReg = memory.read(stackPointer);
+	return 12;
+}
+
+inline cycle PUSH(Memory &memory, address &stackPointer, const byte highReg, const byte lowReg)
+{
+	memory.write(stackPointer, highReg);
+	stackPointer = Gahood::sub(stackPointer, 0x01);
+	memory.write(stackPointer, lowReg);
+	stackPointer = Gahood::sub(stackPointer, 0x01);
+	return 16;
+}
+
 /* Arithmetic */
 inline cycle INC(address &programCounter, byte &flags, byte &reg)
 {
@@ -354,6 +372,12 @@ inline cycle JP(Memory &memory, address &programCounter)
 	return 16;
 }
 
+inline cycle JP(address &programCounter, const byte regHigh, const byte regLow)
+{
+	programCounter = Gahood::addressFromBytes(regHigh, regLow);
+	return 4;
+}
+
 inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 {
 	if (condition)
@@ -368,7 +392,7 @@ inline cycle JR(Memory &memory, address &programCounter, const bool condition)
 	}
 }
 
-inline cycle CALL(Memory &memory, address & programCounter, address &stackPointer)
+inline cycle CALL(Memory &memory, address &programCounter, address &stackPointer)
 {
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
 	stackPointer = Gahood::sub(stackPointer, 0x01);
@@ -378,14 +402,14 @@ inline cycle CALL(Memory &memory, address & programCounter, address &stackPointe
 	return 12;
 }
 
-inline cycle RET(Memory &memory, address & programCounter, address &stackPointer)
+inline cycle RET(Memory &memory, address &programCounter, address &stackPointer)
 {
 	programCounter = Gahood::addressFromBytes(memory.read(stackPointer + 0x02), memory.read(stackPointer + 0x01));
 	stackPointer += 0x02;
 	return 16;
 }
 
-inline cycle RST(Memory &memory, address & programCounter, address &stackPointer, const byte resetTo)
+inline cycle RST(Memory &memory, address &programCounter, address &stackPointer, const byte resetTo)
 {
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
 	stackPointer = Gahood::sub(stackPointer, 0x01);

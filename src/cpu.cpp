@@ -115,6 +115,8 @@ cycle Cpu::process(Memory &memory)
 			return DAA(registers.flags, registers.A);
         case 0x29: // ADD HL,HL
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.H, registers.L);
+		case 0x30: // JR NC,r8
+			return JR(memory, registers.programCounter, !getCarryFlag(registers.flags));
 		case 0x2A: // LD A,(HL+)
 		{
 			const address addrToRead = Gahood::addressFromBytes(registers.H, registers.L) + 0x01;
@@ -447,10 +449,22 @@ cycle Cpu::process(Memory &memory)
 			return CP(memory, registers.programCounter, registers.flags, registers.A, registers.H, registers.L);
 		case 0xBF: // CP A
 			return CP(registers.flags, registers.A, registers.A);
+		case 0xC1: // POP BC
+			return POP(memory, registers.stackPointer, registers.B, registers.C);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
+		case 0xC5: // PUSH BC
+			return PUSH(memory, registers.stackPointer, registers.B, registers.C);
 		case 0xC7: // RST 00
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x00);
+		case 0xC8: // RET Z
+		{
+			if (getZeroFlag(registers.flags))
+			{
+				return RET(memory, registers.programCounter, registers.stackPointer) + 0x04;
+			}
+			return 8;
+		}
 		case 0xC9: // RET
 			return RET(memory, registers.programCounter, registers.stackPointer);
 		case 0xCB: // PREFIX CB
@@ -462,21 +476,31 @@ cycle Cpu::process(Memory &memory)
 			return CALL(memory, registers.programCounter, registers.stackPointer);
 		case 0xCF: // RST 08
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x08);
+		case 0xD1: // POP DE
+			return POP(memory, registers.stackPointer, registers.D, registers.E);
+		case 0xD5: // PUSH DE
+			return PUSH(memory, registers.stackPointer, registers.D, registers.E);
 		case 0xD7: // RST 10
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x10);
 		case 0xDF: // RST 18
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x18);
 		case 0xE0: // LDH (a8),A
 			return LDH(memory, registers.programCounter, registers.A);
+		case 0xE1: // POP HL
+			return POP(memory, registers.stackPointer, registers.H, registers.L);
 		case 0xE2: // LD (C),A
 		{
 			memory.write(Gahood::addressFromBytes(0xFF, registers.C), registers.A);
 			return 8;
 		}
+		case 0xE5: // PUSH HL
+			return PUSH(memory, registers.stackPointer, registers.H, registers.L);
 		case 0xE6: // AND d8
 			return AND(memory, registers.programCounter, registers.flags, registers.A);
 		case 0xE7: // RST 20
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x20);
+		case 0xE9: // JP (HL)
+			return JP(registers.programCounter, registers.H, registers.L);
 		case 0xEA: // LD (a16),A
 		{
 			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
@@ -488,6 +512,8 @@ cycle Cpu::process(Memory &memory)
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x28);
 		case 0xF0: // LDH A,(a8)
 			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter))));
+		case 0xF1: // POP AF
+			return POP(memory, registers.stackPointer, registers.A, registers.flags);
 		case 0xFA: // LD A,(a16)
 		{
 			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
@@ -502,6 +528,8 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xF3: // DI
 			return DI(registers.programCounter, IME);
+		case 0xF5: // PUSH AF
+			return PUSH(memory, registers.stackPointer, registers.A, registers.flags);
 		case 0xF7: // RST 30
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x30);
 		case 0xFB: // EI
