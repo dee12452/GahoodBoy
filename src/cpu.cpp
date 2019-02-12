@@ -449,6 +449,8 @@ cycle Cpu::process(Memory &memory)
 			return CP(registers.flags, registers.A, registers.A);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
+		case 0xC7: // RST 00
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x00);
 		case 0xC9: // RET
 			return RET(memory, registers.programCounter, registers.stackPointer);
 		case 0xCB: // PREFIX CB
@@ -458,6 +460,12 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xCD: // CALL a16
 			return CALL(memory, registers.programCounter, registers.stackPointer);
+		case 0xCF: // RST 08
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x08);
+		case 0xD7: // RST 10
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x10);
+		case 0xDF: // RST 18
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x18);
 		case 0xE0: // LDH (a8),A
 			return LDH(memory, registers.programCounter, registers.A);
 		case 0xE2: // LD (C),A
@@ -467,6 +475,8 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xE6: // AND d8
 			return AND(memory, registers.programCounter, registers.flags, registers.A);
+		case 0xE7: // RST 20
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x20);
 		case 0xEA: // LD (a16),A
 		{
 			const address addrToWrite = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
@@ -474,6 +484,8 @@ cycle Cpu::process(Memory &memory)
 			registers.programCounter += 0x02;
 			return 16;
 		}
+		case 0xEF: // RST 28
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x28);
 		case 0xF0: // LDH A,(a8)
 			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter))));
 		case 0xFA: // LD A,(a16)
@@ -490,10 +502,14 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xF3: // DI
 			return DI(registers.programCounter, IME);
+		case 0xF7: // RST 30
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x30);
 		case 0xFB: // EI
 			return EI(registers.programCounter, IME);
 		case 0xFE: // CP d8
 			return CP(memory, registers.programCounter, registers.flags, registers.A);
+		case 0xFF: // RST 38
+			return RST(memory, registers.programCounter, registers.stackPointer, 0x38);
         default:
             Gahood::log("CPU encountered unknown op-code %x at %x", nextOpCode & 0xFF, registers.programCounter & 0xFFFF);
             break;

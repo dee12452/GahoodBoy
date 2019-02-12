@@ -385,6 +385,16 @@ inline cycle RET(Memory &memory, address & programCounter, address &stackPointer
 	return 16;
 }
 
+inline cycle RST(Memory &memory, address & programCounter, address &stackPointer, const byte resetTo)
+{
+	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
+	stackPointer = Gahood::sub(stackPointer, 0x01);
+	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
+	stackPointer = Gahood::sub(stackPointer, 0x01);
+	programCounter = Gahood::addressFromBytes(0x00, resetTo);
+	return 16;
+}
+
 /* Flag getters and setters */
 inline void setCarryFlag(byte &flags, const bool on)
 {
