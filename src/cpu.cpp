@@ -103,8 +103,9 @@ cycle Cpu::process(Memory &memory)
             return LD16(memory, registers.programCounter, registers.H, registers.L);
         case 0x22: // LD (HL+),A
 		{
-			const address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L) + 0x01;
+			address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L);
 			memory.write(addrToWrite, registers.A);
+			addrToWrite += 0x01;
 			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
 			return 8;
@@ -125,8 +126,9 @@ cycle Cpu::process(Memory &memory)
 			return JR(memory, registers.programCounter, !getCarryFlag(registers.flags));
 		case 0x2A: // LD A,(HL+)
 		{
-			const address addrToRead = Gahood::addressFromBytes(registers.H, registers.L) + 0x01;
+			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
 			registers.A = memory.read(addrToRead);
+			addrToRead += 0x01;
 			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
 			return 8;
@@ -145,8 +147,9 @@ cycle Cpu::process(Memory &memory)
             return LD16(memory, registers.programCounter, registers.stackPointer, true);
         case 0x32: // LD (HL-),A
 		{
-			const address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L) - 0x01;
+			address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L);
 			memory.write(addrToWrite, registers.A);
+			addrToWrite = Gahood::sub(addrToWrite, 0x01);
 			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
 			return 8;
@@ -163,8 +166,9 @@ cycle Cpu::process(Memory &memory)
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, static_cast<byte> (registers.stackPointer >> 8), static_cast<byte> (registers.stackPointer & 0x00FF));
 		case 0x3A: // LD A,(HL-)
 		{
-			const address addrToRead = Gahood::addressFromBytes(registers.H, registers.L) - 0x01;
+			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
 			registers.A = memory.read(addrToRead);
+			addrToRead = Gahood::sub(addrToRead, 0x01);
 			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
 			return 8;
