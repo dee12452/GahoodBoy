@@ -65,24 +65,6 @@ inline cycle LD16(Memory &memory, address &programCounter, byte &regHigh, byte &
     return 12;
 }
 
-inline cycle LD16(Memory &memory, address &programCounter, address &stackPointer, bool intoStackPointer)
-{
-    if(intoStackPointer)
-    {
-        stackPointer = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
-        programCounter += 0x02;
-        return 12;
-    }
-    else
-    {
-        const address addrToPut = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
-        memory.write(addrToPut, static_cast<byte> (stackPointer >> 8));
-        memory.write(addrToPut + 0x01, static_cast<byte> (stackPointer & 0x0F));
-        programCounter += 0x02;
-        return 20;
-    }
-}
-
 inline cycle LDH(Memory &memory, address &programCounter, byte &regA)
 {
 	memory.write(Gahood::addressFromBytes(0xFF, memory.read(programCounter)), regA);

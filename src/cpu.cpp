@@ -47,7 +47,13 @@ cycle Cpu::process(Memory &memory)
         case 0x07: // RLCA
             return RLCA(registers.flags, registers.A);
         case 0x08: // LD (a16),SP
-            return LD16(memory, registers.programCounter, registers.stackPointer, false);
+        {
+			const address addrToPut = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
+			memory.write(addrToPut, static_cast<byte> (registers.stackPointer & 0x00FF));
+			memory.write(addrToPut + 0x01, static_cast<byte> (registers.stackPointer >> 8));
+			registers.programCounter += 0x02;
+			return 20;
+		}
         case 0x09: // ADD HL,BC
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.B, registers.C);
 		case 0x0A: // LD A,(BC)
@@ -148,13 +154,17 @@ cycle Cpu::process(Memory &memory)
 		case 0x2F: // CPL
 			return CPL(registers.flags, registers.A);
         case 0x31: // LD SP,d16
-            return LD16(memory, registers.programCounter, registers.stackPointer, true);
+        {
+			registers.stackPointer = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
+			registers.programCounter += 0x02;
+			return 12;
+		}
         case 0x32: // LD (HL-),A
 		{
 			address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L);
 			memory.write(addrToWrite, registers.A);
 			addrToWrite = Gahood::sub(addrToWrite, 0x01);
-			registers.H = static_cast<byte> ((addrToWrite & 0xFF00) >> 8);
+			registers.H = static_cast<byte> (addrToWrite >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
 			return 8;
 		}
