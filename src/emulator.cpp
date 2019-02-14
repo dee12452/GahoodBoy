@@ -11,23 +11,31 @@ int Emulator::run(int argc, char **argv)
 {
     init();
 
-    char *romPath = NULL;
-    bool isDebug = false;
-    if(argc == 2)
+    if(argc < 2)
     {
-        romPath = argv[1];
-    }
-    else if(argc == 3 && Gahood::stringLiteralEquals(argv[2], "debug"))
-    {
-        romPath = argv[1];
-        isDebug = true;
-    }
-    else
-    {
-        Gahood::criticalError("Invalid arguments passed");
+        Gahood::criticalError("Invalid arguments passed, must at least pass the path to the rom file.");
     }
 
-    Gahood::log( "Loading ROM %s", romPath);
+    char *romPath = argv[1];
+    for(int i = 2; i < argc; i++)
+    {
+        if(Gahood::stringLiteralEquals(argv[i], "-d"))
+        {
+            Gahood::log("Debug mode enabled.");
+            Gahood::setDebugMode(true);
+        }
+        else if(Gahood::stringLiteralEquals(argv[i], "-v"))
+        {
+            Gahood::log("Very verbose mode enabled.");
+            Gahood::setVerboseMode(true);
+        }
+        else
+        {
+            Gahood::log("Ignoring passed argument %s.", argv[i]);
+        }
+    }
+
+    Gahood::log("Loading ROM %s", romPath);
 
 	Cartridge cartridge(romPath);
 	Memory memory(cartridge);
@@ -42,7 +50,7 @@ int Emulator::run(int argc, char **argv)
 		video.render(memory, clocksSpent);
     }
 
-    if(isDebug)
+    if(Gahood::isDebugMode())
     {
         memory.dumpToFile("debug/memoryDump.txt");
     }

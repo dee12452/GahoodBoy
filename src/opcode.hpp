@@ -229,7 +229,7 @@ inline cycle SUB(byte &flags, byte &reg1, const byte reg2)
 
 inline cycle SBC(byte &flags, byte &reg1, const byte reg2)
 {
-	return SUB(flags, reg1, reg2 + getCarryFlag(flags) ? 0x01 : 0x00);
+	return SUB(flags, reg1, reg2 + (getCarryFlag(flags) ? 0x01 : 0x00));
 }
 
 inline cycle AND(byte &flags, byte &reg1, const byte reg2)

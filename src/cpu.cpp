@@ -20,6 +20,10 @@ Cpu::Cpu()
 cycle Cpu::process(Memory &memory)
 {
     const byte nextOpCode = memory.read(registers.programCounter);
+	if(Gahood::isVerboseMode())
+	{
+		Gahood::log("Processing %x: %x", registers.programCounter, nextOpCode);
+	}
 	registers.programCounter += 0x01;
     switch(nextOpCode)
     {
@@ -586,6 +590,10 @@ cycle Cpu::process(Memory &memory)
 cycle Cpu::processPrefix(Memory &memory)
 {
 	const byte nextOpCode = memory.read(registers.programCounter);
+	if(Gahood::isVerboseMode())
+	{
+		Gahood::log("Processing CB prefix %x: %x", registers.programCounter, nextOpCode);
+	}
 	registers.programCounter += 0x01;
 	switch (nextOpCode)
 	{

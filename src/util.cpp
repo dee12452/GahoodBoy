@@ -6,6 +6,9 @@
 #include <sys/time.h>
 #endif
 
+static bool isDebug = false;
+static bool isVerbose = false;
+
 bool Gahood::stringEquals(char *str1, char *str2)
 {
     size iterator = 0;
@@ -47,7 +50,7 @@ byte * Gahood::readFileAsBytes(const char *filePath, size &sizeOfFile)
     SDL_RWops *fileCtx = SDL_RWFromFile(filePath, "rb");
     if(!fileCtx)
     {
-        Gahood::criticalSdlError("Failed to read file: %s");
+        Gahood::criticalSdlError("Failed to read file: %s", filePath);
         exit(EXIT_FAILURE);
     }
 
@@ -227,4 +230,24 @@ bool Gahood::bitOn(const byte checkByte, const BitNumber bitNum)
 		Gahood::log("Warning: check byte reached unexpected value %x", checkByte & 0xFF);
 		return false;
 	}
+}
+
+bool Gahood::isDebugMode()
+{
+    return isDebug;
+}
+
+void Gahood::setDebugMode(bool debugEnabled)
+{
+    isDebug = debugEnabled;
+}
+
+bool Gahood::isVerboseMode()
+{
+    return isVerbose;
+}
+
+void Gahood::setVerboseMode(bool verboseEnabled)
+{
+    isVerbose = verboseEnabled;
 }

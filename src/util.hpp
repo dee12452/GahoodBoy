@@ -33,6 +33,11 @@ namespace Gahood
     microseconds getCurrentMicroseconds();
     milliseconds getCurrentMilliseconds();
 	bool bitOn(const byte checkByte, const BitNumber bitNum);
+
+    bool isDebugMode();
+    void setDebugMode(bool debugEnabled);
+    bool isVerboseMode();
+    void setVerboseMode(bool verboseEnabled);
 }
 
 #endif
