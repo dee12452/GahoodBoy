@@ -26,10 +26,6 @@ namespace Gahood
     void log(const char *message, ...);
     void criticalError(const char *message, ...);
     void criticalSdlError(const char *message, ...);
-    byte sub(const byte byte1, const byte byte2);
-    byte add(const byte byte1, const byte byte2);
-    address sub(const address addr1, const address addr2);
-    address add(const address addr1, const address addr2);
     microseconds getCurrentMicroseconds();
     milliseconds getCurrentMilliseconds();
 	bool bitOn(const byte checkByte, const BitNumber bitNum);

@@ -130,6 +130,8 @@ cycle Cpu::process(Memory &memory)
             return LD(memory, registers.programCounter, registers.H);
 		case 0x27: // DAA
 			return DAA(registers.flags, registers.A);
+		case 0x28: // JR Z,r8
+			return JR(memory, registers.programCounter, getZeroFlag(registers.flags));
         case 0x29: // ADD HL,HL
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.H, registers.L);
 		case 0x30: // JR NC,r8
@@ -163,7 +165,7 @@ cycle Cpu::process(Memory &memory)
 		{
 			address addrToWrite = Gahood::addressFromBytes(registers.H, registers.L);
 			memory.write(addrToWrite, registers.A);
-			addrToWrite = Gahood::sub(addrToWrite, 0x01);
+			addrToWrite -= 0x01;
 			registers.H = static_cast<byte> (addrToWrite >> 8);
 			registers.L = static_cast<byte> (addrToWrite & 0x00FF);
 			return 8;
@@ -182,7 +184,7 @@ cycle Cpu::process(Memory &memory)
 		{
 			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
 			registers.A = memory.read(addrToRead);
-			addrToRead = Gahood::sub(addrToRead, 0x01);
+			addrToRead -= 0x01;
 			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
 			return 8;
@@ -485,8 +487,16 @@ cycle Cpu::process(Memory &memory)
 			return POP(memory, registers.stackPointer, registers.B, registers.C);
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
+		case 0xC4: // CALL NZ,a16
+			return CALL(memory, registers.programCounter, registers.stackPointer, !getZeroFlag(registers.flags));
 		case 0xC5: // PUSH BC
 			return PUSH(memory, registers.stackPointer, registers.B, registers.C);
+		case 0xC6: // ADD A,d8
+		{
+			const cycle clocks = ADD(registers.flags, registers.A, memory.read(registers.programCounter));
+			registers.programCounter += 0x01;
+			return clocks * 2;
+		}
 		case 0xC7: // RST 00
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x00);
 		case 0xC8: // RET Z
@@ -534,6 +544,12 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xD7: // RST 10
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x10);
+		case 0xDE: // SBC A,d8
+		{
+			const cycle clocks = SBC(registers.flags, registers.A, memory.read(registers.programCounter));
+			registers.programCounter += 0x01;
+			return clocks * 2;
+		}
 		case 0xDF: // RST 18
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x18);
 		case 0xE0: // LDH (a8),A
@@ -559,6 +575,12 @@ cycle Cpu::process(Memory &memory)
 			memory.write(addrToWrite, registers.A);
 			registers.programCounter += 0x02;
 			return 16;
+		}
+		case 0xEE: // XOR d8
+		{
+			const cycle clocks = XOR(registers.flags, registers.A, memory.read(registers.programCounter));
+			registers.programCounter += 0x01;
+			return clocks * 2;
 		}
 		case 0xEF: // RST 28
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x28);

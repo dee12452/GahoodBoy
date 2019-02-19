@@ -120,54 +120,6 @@ void Gahood::criticalSdlError(const char *message, ...)
     exit(EXIT_FAILURE);
 }
 
-byte Gahood::sub(const byte byte1, const byte byte2)
-{
-    if(byte1 < byte2)
-    {
-        return 0x00;
-    }
-    else
-    {
-        return byte1 - byte2;
-    }
-}
-
-byte Gahood::add(const byte byte1, const byte byte2)
-{
-    if(0xFF - byte1 < byte2)
-    {
-        return 0xFF;
-    }
-    else
-    {
-        return byte1 + byte2;
-    }
-}
-
-address Gahood::sub(const address addr1, const address addr2)
-{
-    if(addr1 < addr2)
-    {
-        return 0x0000;
-    }
-    else
-    {
-        return addr1 - addr2;
-    }
-}
-
-address Gahood::add(const address addr1, const address addr2)
-{
-    if(0xFFFF - addr1 < addr2)
-    {
-        return 0xFFFF;
-    }
-    else
-    {
-        return addr1 + addr2;
-    }
-}
-
 /*
 * Windows version of gettimeofday
 * Copied directly from https://stackoverflow.com/questions/10905892/equivalent-of-gettimeday-for-windows (Thanks Michaelangel007!)
