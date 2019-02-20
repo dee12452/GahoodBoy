@@ -322,6 +322,22 @@ inline cycle DAA(byte &flags, byte &regA)
 	return 4;
 }
 
+inline cycle SCF(byte &flags)
+{
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	setCarryFlag(flags, true);
+	return 4;
+}
+
+inline cycle CCF(byte &flags)
+{
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	setCarryFlag(flags, !getCarryFlag(flags));
+	return 4;
+}
+
 /* Rotation / Shifts */
 inline cycle RLA(byte &flags, byte &regA)
 {
@@ -376,6 +392,19 @@ inline cycle JP(Memory &memory, address &programCounter)
 {
 	programCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
 	return 16;
+}
+
+inline cycle JP(Memory &memory, address &programCounter, const bool condition)
+{
+	if (condition)
+	{
+		return JP(memory, programCounter);
+	}
+	else
+	{
+		programCounter += 0x02;
+		return 12;
+	}
 }
 
 inline cycle JP(address &programCounter, const byte regHigh, const byte regLow)

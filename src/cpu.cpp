@@ -178,6 +178,10 @@ cycle Cpu::process(Memory &memory)
             return DEC(memory, registers.programCounter, registers.flags, registers.H, registers.L);
         case 0x36: // LD (HL),d8
             return LD(memory, registers.programCounter, registers.H, registers.L);
+		case 0x37: // SCF
+			return SCF(registers.flags);
+		case 0x38: // JR C,r8
+			return JR(memory, registers.programCounter, getCarryFlag(registers.flags));
         case 0x39: // ADD HL,SP
             return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, static_cast<byte> (registers.stackPointer >> 8), static_cast<byte> (registers.stackPointer & 0x00FF));
 		case 0x3A: // LD A,(HL-)
@@ -200,6 +204,8 @@ cycle Cpu::process(Memory &memory)
 			return DEC(registers.programCounter, registers.flags, registers.A);
 		case 0x3E: // LD A,d8
 			return LD(memory, registers.programCounter, registers.A);
+		case 0x3F: // CCF
+			return CCF(registers.flags);
 		case 0x40: // LD B,B
 			return LD(registers.programCounter, registers.B, registers.B);
 		case 0x41: // LD B,C
@@ -485,6 +491,8 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xC1: // POP BC
 			return POP(memory, registers.stackPointer, registers.B, registers.C);
+		case 0xC2: // JP NZ,a16
+			return JP(memory, registers.programCounter, !getZeroFlag(registers.flags));
 		case 0xC3:  // JP a16
 			return JP(memory, registers.programCounter);
 		case 0xC4: // CALL NZ,a16
@@ -509,11 +517,15 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xC9: // RET
 			return RET(memory, registers.programCounter, registers.stackPointer);
+		case 0xCA: // JP Z,a16
+			return JP(memory, registers.programCounter, getZeroFlag(registers.flags));
 		case 0xCB: // PREFIX CB
 		{
 			const cycle clocks = processPrefix(memory);
 			return clocks < 0 ? -1 : clocks + 4;
 		}
+		case 0xCC: // CALL Z,a16
+			return CALL(memory, registers.programCounter, registers.stackPointer, getZeroFlag(registers.flags));
 		case 0xCD: // CALL a16
 			return CALL(memory, registers.programCounter, registers.stackPointer);
 		case 0xCE: // ADC A,d8
@@ -534,6 +546,14 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xD1: // POP DE
 			return POP(memory, registers.stackPointer, registers.D, registers.E);
+		case 0xD2: // JP NC,a16
+			return JP(memory, registers.programCounter, !getCarryFlag(registers.flags));
+		case 0xD3: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xD4: // CALL NC,a16
+			return CALL(memory, registers.programCounter, registers.stackPointer, !getCarryFlag(registers.flags));
 		case 0xD5: // PUSH DE
 			return PUSH(memory, registers.stackPointer, registers.D, registers.E);
 		case 0xD6: // SUB d8
@@ -544,6 +564,32 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xD7: // RST 10
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x10);
+		case 0xD8: // RET C
+		{
+			if (getCarryFlag(registers.flags))
+			{
+				return RET(memory, registers.programCounter, registers.stackPointer) + 0x04;
+			}
+			return 8;
+		}
+		// TODO: Implement Interrupts
+		//case 0xD9: // RETI
+		//{
+		//	IME = true;
+		//	return RET(memory, registers.programCounter, registers.stackPointer);
+		//}
+		case 0xDA: // JP C,a16
+			return JP(memory, registers.programCounter, getCarryFlag(registers.flags));
+		case 0xDB: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xDC: // CALL C,a16
+			return CALL(memory, registers.programCounter, registers.stackPointer, getCarryFlag(registers.flags));
+		case 0xDD: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
 		case 0xDE: // SBC A,d8
 		{
 			const cycle clocks = SBC(registers.flags, registers.A, memory.read(registers.programCounter));
@@ -561,12 +607,37 @@ cycle Cpu::process(Memory &memory)
 			memory.write(Gahood::addressFromBytes(0xFF, registers.C), registers.A);
 			return 8;
 		}
+		case 0xE3: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xE4: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
 		case 0xE5: // PUSH HL
 			return PUSH(memory, registers.stackPointer, registers.H, registers.L);
 		case 0xE6: // AND d8
 			return AND(memory, registers.programCounter, registers.flags, registers.A);
 		case 0xE7: // RST 20
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x20);
+		case 0xE8: // ADD SP,r8
+		{
+			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
+			const address result = registers.stackPointer + offset;
+			setZeroFlag(registers.flags, false);
+			setSubtractFlag(registers.flags, false);
+			if (offset < 0)
+			{
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) < (result & 0x000F));
+			}
+			else
+			{
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) > (result & 0x000F));
+			}
+			registers.stackPointer = result;
+			return 16;
+		}
 		case 0xE9: // JP (HL)
 			return JP(registers.programCounter, registers.H, registers.L);
 		case 0xEA: // LD (a16),A
@@ -575,6 +646,18 @@ cycle Cpu::process(Memory &memory)
 			memory.write(addrToWrite, registers.A);
 			registers.programCounter += 0x02;
 			return 16;
+		}
+		case 0xEB: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xEC: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xED: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
 		}
 		case 0xEE: // XOR d8
 		{
@@ -588,13 +671,6 @@ cycle Cpu::process(Memory &memory)
 			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter))));
 		case 0xF1: // POP AF
 			return POP(memory, registers.stackPointer, registers.A, registers.flags);
-		case 0xFA: // LD A,(a16)
-		{
-			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
-			registers.A = memory.read(addrToRead);
-			registers.programCounter += 0x02;
-			return 16;
-		}
 		case 0xF2: // LD A,(C)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(0xFF, registers.C));
@@ -602,12 +678,63 @@ cycle Cpu::process(Memory &memory)
 		}
 		case 0xF3: // DI
 			return DI(registers.programCounter, IME);
+		case 0xF4: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
 		case 0xF5: // PUSH AF
 			return PUSH(memory, registers.stackPointer, registers.A, registers.flags);
+		case 0xF6: // OR d8
+		{
+			const cycle clocks = OR(registers.flags, registers.A, memory.read(registers.programCounter));
+			registers.programCounter += 0x01;
+			return clocks * 2;
+		}
 		case 0xF7: // RST 30
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x30);
-		case 0xFB: // EI
-			return EI(registers.programCounter, IME);
+		case 0xF8: // LD HL,SP+r8
+		{
+			setZeroFlag(registers.flags, false);
+			setSubtractFlag(registers.flags, false);
+			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
+			const address result = registers.stackPointer + offset;
+			setCarryFlag(registers.flags, (result & 0xFF00) == (registers.stackPointer & 0xFF00));
+			if (offset < 0)
+			{
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) < (result & 0x000F));
+			}
+			else
+			{
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) > (result & 0x000F));
+			}
+			registers.H = static_cast<byte> (result >> 8);
+			registers.L = static_cast<byte> (result & 0x00FF);
+			registers.programCounter += 0x01;
+			return 12;
+		}
+		case 0xF9: // LD SP,HL
+		{
+			registers.stackPointer = Gahood::addressFromBytes(registers.H, registers.L);
+			return 8;
+		}
+		case 0xFA: // LD A,(a16)
+		{
+			const address addrToRead = Gahood::addressFromBytes(memory.read(registers.programCounter + 0x01), memory.read(registers.programCounter));
+			registers.A = memory.read(addrToRead);
+			registers.programCounter += 0x02;
+			return 16;
+		}
+		// TODO: Implement Interrupts
+		//case 0xFB: // EI
+		//	return EI(registers.programCounter, IME);
+		case 0xFC: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
+		case 0xFD: // ERROR
+		{
+			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
+		}
 		case 0xFE: // CP d8
 			return CP(memory, registers.programCounter, registers.flags, registers.A);
 		case 0xFF: // RST 38
