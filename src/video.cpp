@@ -49,6 +49,7 @@ Video::Video(Memory &memory)
 
 Video::~Video()
 {
+	SDL_DestroyTexture(background);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 }
