@@ -291,34 +291,34 @@ inline cycle CPL(byte &flags, byte &regA)
 
 inline cycle DAA(byte &flags, byte &regA)
 {
+	signed short int a = regA;
 	if(getSubtractFlag(flags))
 	{
-		if (getHalfCarryFlag(flags) || (regA & 0x0F) > 0x09)
+		if (getHalfCarryFlag(flags))
 		{
-			setCarryFlag(flags, regA < 0x06);
-			regA -= 0x06;
+			a = (a - 0x06) & 0xFF;
 		}
-		if (getCarryFlag(flags) || (regA & 0xF0) > 0x90)
+		if (getCarryFlag(flags))
 		{
-			setCarryFlag(flags, regA < 0x60);
-			regA -= 0x60;
+			a -= 0x60;
 		}
 	}
 	else
 	{
-		if (getHalfCarryFlag(flags) || (regA & 0x0F) > 0x09)
+		if (getHalfCarryFlag(flags) || ((a & 0x0F) > 0x09))
 		{
-			setCarryFlag(flags, 0xFF - regA <= 0x06);
-			regA += 0x06;
+			a += 0x06;
 		}
-		if (getCarryFlag(flags) || (regA & 0xF0) > 0x90)
+		if (getCarryFlag(flags) || (a > 0x9F))
 		{
-			setCarryFlag(flags, 0xFF - regA <= 0x60);
-			regA += 0x60;
+			a += 0x60;
 		}
 	}
-	setZeroFlag(flags, regA == 0x00);
+	
+	setCarryFlag(flags, ((a & 0x0100) == 0x0100));
 	setHalfCarryFlag(flags, false);
+	regA = static_cast<byte> (a &= 0xFF);
+	setZeroFlag(flags, regA == 0x00);
 	return 4;
 }
 
