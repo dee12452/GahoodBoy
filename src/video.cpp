@@ -96,6 +96,7 @@ void Video::update(Memory &memory, const cycle clocks)
 	if (lYCoord == lYCompare)
 	{
 		memory.write(0xFF41, lcdStatus | 0x04);
+		memory.write(0xFF0F, (memory.read(0xFF0F) | 0x02)); // Set the IF register to say we are in LCD STAT
 	}
 	else
 	{
