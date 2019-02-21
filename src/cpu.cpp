@@ -720,7 +720,11 @@ cycle Cpu::processNext(Memory &memory)
 		case 0xF0: // LDH A,(a8)
 			return LDH(registers.programCounter, registers.A, memory.read(Gahood::addressFromBytes(0xFF, memory.read(registers.programCounter))));
 		case 0xF1: // POP AF
-			return POP(memory, registers.stackPointer, registers.A, registers.flags);
+		{
+			cycle clocks = POP(memory, registers.stackPointer, registers.A, registers.flags);
+			registers.flags &= 0xF0; // Clear out the bottom portion of the flags
+			return clocks;
+		}
 		case 0xF2: // LD A,(C)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(0xFF, registers.C));
