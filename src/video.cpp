@@ -3,6 +3,8 @@
 
 Video::Video(Memory &memory)
 {
+	const unsigned int fpsMsTime = 1000 / GAHOOD_BOY_MAX_FPS;
+	renderTimer = Timer(fpsMsTime);
 	window = SDL_CreateWindow("GahoodBoy", 100, 100, 500, 500, SDL_WINDOW_OPENGL);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 
@@ -18,6 +20,29 @@ Video::Video(Memory &memory)
 	{
 		Gahood::criticalSdlError("Failed to clip the resolution");
 	}
+	background = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 256, 256);
+	if (!background)
+	{
+		Gahood::criticalSdlError("Failed to create the background texture");
+	}
+
+	if (SDL_SetRenderTarget(renderer, background) < 0)
+	{
+		Gahood::criticalSdlError("Failed to target the background texture");
+	}
+	if (SDL_RenderClear(renderer) < 0)
+	{
+		Gahood::criticalSdlError("Failed to clear the background texture");
+	}
+	if (SDL_SetRenderTarget(renderer, NULL) < 0)
+	{
+		Gahood::criticalSdlError("Failed to target the window");
+	}
+	if (SDL_RenderClear(renderer) < 0)
+	{
+		Gahood::criticalSdlError("Failed to clear the window");
+	}
+	SDL_RenderPresent(renderer);
 
 	currentClocks = 0;
 }
@@ -31,7 +56,11 @@ Video::~Video()
 void Video::render(Memory &memory, const cycle clocks)
 {
 	refresh(memory);
-	draw(memory, clocks);
+	if (!lcdEnabled)
+	{
+		return;
+	}
+	update(memory, clocks);
 }
 
 void Video::refresh(Memory &memory)
@@ -58,14 +87,8 @@ void Video::refresh(Memory &memory)
 
 	lcdStatus = memory.read(0xFF41);
 }
-
-void Video::draw(Memory &memory, const cycle clocks)
+void Video::update(Memory &memory, const cycle clocks)
 {
-	if (!lcdEnabled)
-	{
-		return;
-	}
-
 	currentClocks += clocks;
 
 	// LYC Coincidence Flag
@@ -131,6 +154,15 @@ void Video::draw(Memory &memory, const cycle clocks)
 		Gahood::criticalError("Undefined LCD mode %x", lcdStatus & 0x03);
 	}
 
+	if (renderTimer.checkAndReset())
+	{
+		draw(memory);
+	}
+}
+
+
+void Video::draw(Memory &memory) const
+{
 	byte bgTileNums[32][32];
 	address start, end;
 	if(lcdBgTileMapDisplaySelect) // 9C00-9FFF
@@ -156,18 +188,42 @@ void Video::draw(Memory &memory, const cycle clocks)
 		col++;
 	}
 
-	if(lcdWindowBgTileSelect) // $8000-$8FFF
+	if (SDL_SetRenderTarget(renderer, background) < 0)
 	{
-
+		Gahood::criticalSdlError("Failed to target the background texture");
 	}
-	else // $8800-$97FF
-	{
-
-	}
-
 	if (SDL_RenderClear(renderer) < 0)
 	{
-		Gahood::criticalSdlError("Failed to clear the current screen");
+		Gahood::criticalSdlError("Failed to clear the background texture");
+	}
+
+	unsigned char bX = 0;
+	unsigned char bY = 0;
+	for (unsigned char row = 0; row < 32; row++)
+	{
+		for (unsigned char column = 0; column < 32; column++)
+		{
+			// lcdWindowBgTileSelect == true : $8000-$8FFF with unsigned pattern
+			// else : $8800-$97FF with signed pattern
+			const address currentTile = lcdWindowBgTileSelect ?
+				0x8000 + (bgTileNums[row][column] * 16):
+				0x9000 + (static_cast<signed char> (bgTileNums[row][column]) * 16);
+
+			// draw pixels to background texture
+		}
+	}
+
+	if (SDL_SetRenderTarget(renderer, NULL) < 0)
+	{
+		Gahood::criticalSdlError("Failed to target the window");
+	}
+	if (SDL_RenderClear(renderer) < 0)
+	{
+		Gahood::criticalSdlError("Failed to clear the window");
+	}
+	if (SDL_RenderCopy(renderer, background, NULL, NULL) < 0)
+	{
+		Gahood::criticalSdlError("Failed to draw the texture to the window");
 	}
 	SDL_RenderPresent(renderer);
 }

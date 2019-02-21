@@ -2,6 +2,7 @@
 #define _GAHOOD_BOY_VIDEO_HPP_
 
 #include "memory.hpp"
+#include "timer.hpp"
 
 class Video
 {
@@ -14,6 +15,7 @@ public:
 private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	SDL_Texture *background;
 
 	bool lcdEnabled;
 	bool lcdWindowTileMapSelect;
@@ -35,10 +37,12 @@ private:
 	byte objPallette1;
 	byte lcdStatus;
 
+	Timer renderTimer;
 	cycle currentClocks;
 
 	void refresh(Memory &memory);
-	void draw(Memory &memory, const cycle clocks);
+	void update(Memory &memory, const cycle clocks);
+	void draw(Memory &memory) const;
 };
 
 #endif
