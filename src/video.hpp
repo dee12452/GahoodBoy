@@ -43,6 +43,7 @@ private:
 	void refresh(Memory &memory);
 	void update(Memory &memory, const cycle clocks);
 	void draw(Memory &memory) const;
+	SDL_Color getBgPixelColor(const byte pixelColorSelect) const;
 };
 
 #endif

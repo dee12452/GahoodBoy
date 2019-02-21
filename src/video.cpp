@@ -198,12 +198,18 @@ void Video::draw(Memory &memory) const
 		Gahood::criticalSdlError("Failed to clear the background texture");
 	}
 
-	unsigned char bX = 0;
-	unsigned char bY = 0;
+	unsigned short int bgDrawX = 0;
+	unsigned short int bgDrawY = 0;
 	for (unsigned char row = 0; row < 32; row++)
 	{
 		for (unsigned char column = 0; column < 32; column++)
 		{
+			if(bgDrawX >= 255)
+			{
+				bgDrawX = 0;
+				bgDrawY += 8;
+			}
+
 			// lcdWindowBgTileSelect == true : $8000-$8FFF with unsigned pattern
 			// else : $8800-$97FF with signed pattern
 			const address currentTile = lcdWindowBgTileSelect ?
@@ -211,6 +217,38 @@ void Video::draw(Memory &memory) const
 				0x9000 + (static_cast<signed char> (bgTileNums[row][column]) * 16);
 
 			// draw pixels to background texture
+			for(address tileAddress = currentTile; tileAddress < currentTile + 0x0010; tileAddress += 0x0002)
+			{
+				const byte lowerPixelColor = memory.read(tileAddress);
+				const byte upperPixelColor = memory.read(tileAddress + 0x0001);
+				for(signed char pixelBit = 7; pixelBit >= 0; pixelBit--)
+				{
+					byte pixelColorSelect = 0x00;
+					if(Gahood::bitOn(upperPixelColor, pixelBit))
+					{
+						pixelColorSelect += 0x02;
+					}
+					if(Gahood::bitOn(lowerPixelColor, pixelBit))
+					{
+						pixelColorSelect += 0x01;
+					}
+					const SDL_Color pixelColor = getBgPixelColor(pixelColorSelect);
+					if(SDL_SetRenderDrawColor(renderer, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a) < 0)
+					{
+						Gahood::criticalSdlError("Failed to set render color to pixel color (%d, %d, %d, %d)",
+							pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
+					}
+					if(SDL_RenderDrawPoint(renderer, bgDrawX, bgDrawY) < 0)
+					{
+						Gahood::criticalSdlError("Failed to draw pixel at %d %d", bgDrawX, bgDrawY);
+					}
+					bgDrawX++;
+				}
+				bgDrawX -= 8;
+				bgDrawY++;
+			}
+			bgDrawX += 8;
+			bgDrawY -= 8;
 		}
 	}
 
@@ -227,4 +265,63 @@ void Video::draw(Memory &memory) const
 		Gahood::criticalSdlError("Failed to draw the texture to the window");
 	}
 	SDL_RenderPresent(renderer);
+}
+
+SDL_Color Video::getBgPixelColor(const byte pixelColorSelect) const
+{
+	byte pixelColor = 0x00;
+	switch(pixelColorSelect)
+	{
+	case 0x00:
+		pixelColor |= (bgPallette & 0x03);
+		break;
+	case 0x01:
+		pixelColor |= ((bgPallette & 0x0C) >> 2);
+		break;
+	case 0x02:
+		pixelColor |= ((bgPallette & 0x30) >> 4);
+		break;
+	case 0x03:
+		pixelColor |= ((bgPallette & 0xC0) >> 6);
+		break;
+	default:
+		Gahood::criticalError("Imvalid background pixel color select %x", pixelColorSelect);
+	}
+
+	SDL_Color color;
+	color.a = 255;
+	switch (pixelColor)
+	{
+		case 0x00: // white
+		{
+			color.r = 255;
+			color.g = 255;
+			color.b = 255;
+			break;
+		}
+		case 0x01: // light gray
+		{
+			color.r = 170;
+			color.g = 170;
+			color.b = 170;
+			break;
+		}
+		case 0x02: // dark gray
+		{
+			color.r = 85;
+			color.g = 85;
+			color.b = 85;
+			break;
+		}
+		case 0x03: // black
+		{
+			color.r = 0;
+			color.g = 0;
+			color.b = 0;
+			break;
+		}
+		default:
+			Gahood::criticalError("Imvalid background pixel color %x", pixelColorSelect);
+	}
+	return color;
 }
