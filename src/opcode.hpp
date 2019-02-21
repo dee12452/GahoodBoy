@@ -81,19 +81,19 @@ inline cycle LDH(address &programCounter, byte &regA, const byte value)
 
 inline cycle POP(const Memory &memory, address &stackPointer, byte &highReg, byte &lowReg)
 {
-	stackPointer += 0x01;
 	lowReg = memory.read(stackPointer);
 	stackPointer += 0x01;
 	highReg = memory.read(stackPointer);
+	stackPointer += 0x01;
 	return 12;
 }
 
 inline cycle PUSH(Memory &memory, address &stackPointer, const byte highReg, const byte lowReg)
 {
+	stackPointer -= 0x01;
 	memory.write(stackPointer, highReg);
 	stackPointer -= 0x01;
 	memory.write(stackPointer, lowReg);
-	stackPointer-= 0x01;
 	return 16;
 }
 
@@ -431,10 +431,10 @@ inline cycle CALL(Memory &memory, address &programCounter, address &stackPointer
 {
 	const address nextProgramCounter = Gahood::addressFromBytes(memory.read(programCounter + 0x01), memory.read(programCounter));
 	programCounter += 0x02;
+	stackPointer -= 0x01;
 	memory.write(stackPointer, static_cast<byte> (programCounter >> 8));
 	stackPointer -= 0x01;
 	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
-	stackPointer -= 0x01;
 	programCounter = nextProgramCounter;
 	return 12;
 }
@@ -455,20 +455,20 @@ inline cycle CALL(Memory &memory, address &programCounter, address &stackPointer
 
 inline cycle RET(Memory &memory, address &programCounter, address &stackPointer)
 {
-	stackPointer += 0x01;
 	const byte lowReg = memory.read(stackPointer);
 	stackPointer += 0x01;
 	const byte highReg = memory.read(stackPointer);
+	stackPointer += 0x01;
 	programCounter = Gahood::addressFromBytes(highReg, lowReg);
 	return 16;
 }
 
 inline cycle RST(Memory &memory, address &programCounter, address &stackPointer, const byte resetTo)
 {
+	stackPointer -= 0x01;
 	memory.write(stackPointer, static_cast<byte> ((programCounter & 0xFF00) >> 8));
 	stackPointer -= 0x01;
 	memory.write(stackPointer, static_cast<byte> (programCounter & 0x00FF));
-	stackPointer -= 0x01;
 	programCounter = Gahood::addressFromBytes(0x00, resetTo);
 	return 16;
 }

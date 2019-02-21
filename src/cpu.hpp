@@ -42,6 +42,8 @@ private:
     Registers registers;
     bool IME;
 
+    void checkInterrupts(Memory &memory);
+    void initiateInterrupt(Memory &memory, const byte IF, const BitNumber interruptBit, const address callAddress);
     cycle processNext(Memory &memory);
     cycle processNextPrefix(Memory &memory);
 };

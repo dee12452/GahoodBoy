@@ -19,7 +19,53 @@ Cpu::Cpu()
 
 cycle Cpu::update(Memory &memory)
 {
+	checkInterrupts(memory);
 	return processNext(memory);
+}
+
+void Cpu::checkInterrupts(Memory &memory)
+{
+	if(!IME)
+	{
+		return;
+	}
+
+	const byte IE = memory.read(0xFFFF);
+	const byte IF = memory.read(0xFF0F);
+
+	if(Gahood::bitOn(IE, 0) && Gahood::bitOn(IF, 0)) // V-Blank 0x40
+	{
+		initiateInterrupt(memory, IF, 0, 0x40);
+	}
+	else if(Gahood::bitOn(IE, 1) && Gahood::bitOn(IF, 1)) // LCD STAT 0x48
+	{
+		initiateInterrupt(memory, IF, 1, 0x48);
+	}
+	else if(Gahood::bitOn(IE, 2) && Gahood::bitOn(IF, 2)) // Timer 0x50
+	{
+		initiateInterrupt(memory, IF, 2, 0x50);
+	}
+	else if(Gahood::bitOn(IE, 3) && Gahood::bitOn(IF, 3)) // Serial 0x58
+	{
+		initiateInterrupt(memory, IF, 3, 0x58);
+	}
+	else if(Gahood::bitOn(IE, 4) && Gahood::bitOn(IF, 4)) // Joypad 0x60
+	{
+		initiateInterrupt(memory, IF, 4, 0x60);
+	}
+}
+
+void Cpu::initiateInterrupt(Memory &memory, const byte IF, const BitNumber interruptBit, const address callAddress)
+{
+	IME = false; // Reset the IME
+	memory.write(0xFF0F, (IF & (~(1 << interruptBit)))); // Reset the IF flag for this interrupt
+
+	registers.stackPointer -= 0x01;
+	memory.write(registers.stackPointer, static_cast<byte> (registers.programCounter >> 8));
+	registers.stackPointer -= 0x01;
+	memory.write(registers.stackPointer, static_cast<byte> (registers.programCounter & 0x00FF));
+	
+	registers.programCounter = callAddress;
 }
 
 cycle Cpu::processNext(Memory &memory)
@@ -577,12 +623,11 @@ cycle Cpu::processNext(Memory &memory)
 			}
 			return 8;
 		}
-		// TODO: Implement Interrupts
-		//case 0xD9: // RETI
-		//{
-		//	IME = true;
-		//	return RET(memory, registers.programCounter, registers.stackPointer);
-		//}
+		case 0xD9: // RETI
+		{
+			IME = true;
+			return RET(memory, registers.programCounter, registers.stackPointer);
+		}
 		case 0xDA: // JP C,a16
 			return JP(memory, registers.programCounter, getCarryFlag(registers.flags));
 		case 0xDB: // ERROR
@@ -729,9 +774,8 @@ cycle Cpu::processNext(Memory &memory)
 			registers.programCounter += 0x02;
 			return 16;
 		}
-		// TODO: Implement Interrupts
-		//case 0xFB: // EI
-		//	return EI(registers.programCounter, IME);
+		case 0xFB: // EI
+			return EI(registers.programCounter, IME);
 		case 0xFC: // ERROR
 		{
 			Gahood::criticalError("Cannot process invalid opcode %x at %x", nextOpCode, registers.programCounter);
