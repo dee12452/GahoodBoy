@@ -33,15 +33,17 @@ class Memory;
 
 class Cpu
 {
-    public:
-        Cpu();
+public:
+    Cpu();
 
-        cycle process(Memory &memory);
-		cycle processPrefix(Memory &memory);
-    
-    private:
-        Registers registers;
-        bool IME;
+    cycle update(Memory &memory);
+
+private:
+    Registers registers;
+    bool IME;
+
+    cycle processNext(Memory &memory);
+    cycle processNextPrefix(Memory &memory);
 };
 
 #endif

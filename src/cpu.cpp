@@ -17,7 +17,12 @@ Cpu::Cpu()
 	IME = false;
 }
 
-cycle Cpu::process(Memory &memory)
+cycle Cpu::update(Memory &memory)
+{
+	return processNext(memory);
+}
+
+cycle Cpu::processNext(Memory &memory)
 {
     const byte nextOpCode = memory.read(registers.programCounter);
 	if(Gahood::isVerboseMode())
@@ -521,7 +526,7 @@ cycle Cpu::process(Memory &memory)
 			return JP(memory, registers.programCounter, getZeroFlag(registers.flags));
 		case 0xCB: // PREFIX CB
 		{
-			const cycle clocks = processPrefix(memory);
+			const cycle clocks = processNextPrefix(memory);
 			return clocks < 0 ? -1 : clocks + 4;
 		}
 		case 0xCC: // CALL Z,a16
@@ -746,7 +751,7 @@ cycle Cpu::process(Memory &memory)
     return -1;
 }
 
-cycle Cpu::processPrefix(Memory &memory)
+cycle Cpu::processNextPrefix(Memory &memory)
 {
 	const byte nextOpCode = memory.read(registers.programCounter);
 	if(Gahood::isVerboseMode())

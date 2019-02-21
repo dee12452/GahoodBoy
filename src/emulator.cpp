@@ -45,7 +45,7 @@ int Emulator::run(int argc, char **argv)
 	IO io;
 
 	cycle clocksSpent;
-    while((clocksSpent = cpu.process(memory) >= 0) && io.update(memory))
+    while((clocksSpent = cpu.update(memory) >= 0) && io.update(memory))
     {
 		video.render(memory, clocksSpent);
     }
