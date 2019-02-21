@@ -286,7 +286,7 @@ SDL_Color Video::getBgPixelColor(const byte pixelColorSelect) const
 		pixelColor |= ((bgPallette & 0xC0) >> 6);
 		break;
 	default:
-		Gahood::criticalError("Imvalid background pixel color select %x", pixelColorSelect);
+		Gahood::criticalError("Invalid background pixel color select %x", pixelColorSelect);
 	}
 
 	SDL_Color color;
@@ -322,7 +322,7 @@ SDL_Color Video::getBgPixelColor(const byte pixelColorSelect) const
 			break;
 		}
 		default:
-			Gahood::criticalError("Imvalid background pixel color %x", pixelColorSelect);
+			Gahood::criticalError("Invalid background pixel color %x", pixelColorSelect);
 	}
 	return color;
 }
