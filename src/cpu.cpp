@@ -686,6 +686,7 @@ cycle Cpu::processNext(Memory &memory)
 				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) > (result & 0x000F));
 			}
 			registers.stackPointer = result;
+			registers.programCounter += 0x01;
 			return 16;
 		}
 		case 0xE9: // JP (HL)
