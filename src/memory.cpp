@@ -68,11 +68,23 @@ void Memory::write(const address addr, const byte byteToWrite)
 	}
 	switch (addr)
 	{
+    case 0xFF04: // Timer Divider Register
+    {
+        if(byteToWrite != memoryBytes[addr] + 0x01)
+        {
+            memoryBytes[addr] = 0x00;
+        }
+        else
+        {
+            memoryBytes[addr] = byteToWrite;
+        }
+        break;
+    }
 	case 0xFF46: // LCD OAM DMA Transfers
 	{
 		const address startAddr = static_cast<address> (byteToWrite << 8);
-		const address endAddr = startAddr + 0x0100;
-		for (size wrAddr = startAddr; wrAddr < endAddr; wrAddr += 0x01)
+		const address endAddr = startAddr | 0x9F;
+		for (size wrAddr = startAddr; wrAddr <= endAddr; wrAddr += 0x01)
 		{
 			memoryBytes[(wrAddr & 0x00FF) | 0xFE00] = memoryBytes[wrAddr];
 		}
