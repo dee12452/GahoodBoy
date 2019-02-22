@@ -14,6 +14,10 @@ bool IO::update(Memory &memory)
 		{
 			return false;
 		}
+		else if(currentEvent.type == SDL_KEYUP && currentEvent.key.keysym.scancode == SDL_SCANCODE_V) // Toggle verbose logging
+		{
+			Gahood::setVerboseMode(!Gahood::isVerboseMode());
+		}
 	}
 	const unsigned char *keys = SDL_GetKeyboardState(NULL);
 	const byte joypad = memory.read(0xFF00);

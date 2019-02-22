@@ -123,8 +123,8 @@ void Video::update(Memory &memory, const cycle clocks)
 	case 0x01: // V-Blank 456 clks
 	{
 		memory.write(0xFF0F, (memory.read(0xFF0F) | 0x01)); // Set the IF register to say we are in V-Blank
-		const cycle clocksToPass = 456 / (153 - 144);
-		if (lYCoord == static_cast<byte> (153))
+		const cycle clocksToPass = 456 / (152 - 144);
+		if (lYCoord == static_cast<byte> (152))
 		{
 			if (currentClocks < clocksToPass)
 			{
