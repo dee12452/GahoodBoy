@@ -57,10 +57,6 @@ Video::~Video()
 void Video::render(Memory &memory, const cycle clocks)
 {
 	refresh(memory);
-	if (!lcdEnabled)
-	{
-		return;
-	}
 	update(memory, clocks);
 }
 
@@ -157,7 +153,7 @@ void Video::update(Memory &memory, const cycle clocks)
 		Gahood::criticalError("Undefined LCD mode %x", lcdStatus & 0x03);
 	}
 
-	if (renderTimer.checkAndReset())
+	if (renderTimer.checkAndReset() && lcdEnabled)
 	{
 		draw(memory);
 	}
