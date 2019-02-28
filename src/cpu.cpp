@@ -118,7 +118,7 @@ cycle Cpu::processNext(Memory &memory)
 			return INC(registers.programCounter, registers.flags, registers.C);
 		case 0x0D: // DEC C
 			return DEC(registers.programCounter, registers.flags, registers.C);
-		case 0x0E: // LD C, d8
+		case 0x0E: // LD C,d8
 			return LD(memory, registers.programCounter, registers.C);
 		case 0x0F: // RRCA
 			return RRCA(registers.flags, registers.A);
@@ -275,7 +275,7 @@ cycle Cpu::processNext(Memory &memory)
 			return 8;
 		}
 		case 0x47: // LD B,A
-			return LD(registers.programCounter, registers.C, registers.A);
+			return LD(registers.programCounter, registers.B, registers.A);
 		case 0x48: // LD C,B
 			return LD(registers.programCounter, registers.C, registers.B);
 		case 0x49: // LD C,C
