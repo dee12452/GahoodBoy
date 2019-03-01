@@ -7,7 +7,7 @@ inline cycle RLC(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x80) == 0x80;
 	reg <<= 1;
-	reg += carry ? 0x01 : 0x00;
+	reg |= carry ? 0x01 : 0x00;
 	setZeroFlag(flags, reg == 0x00);
 	setSubtractFlag(flags, false);
 	setHalfCarryFlag(flags, false);
@@ -19,7 +19,7 @@ inline cycle RL(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x80) == 0x80;
 	reg <<= 1;
-	reg += getCarryFlag(flags) ? 0x01 : 0x00;
+	reg |= getCarryFlag(flags) ? 0x01 : 0x00;
 	setZeroFlag(flags, reg == 0x00);
 	setSubtractFlag(flags, false);
 	setHalfCarryFlag(flags, false);
