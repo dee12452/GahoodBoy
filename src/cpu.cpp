@@ -673,21 +673,13 @@ cycle Cpu::processNext(Memory &memory)
 			return RST(memory, registers.programCounter, registers.stackPointer, 0x20);
 		case 0xE8: // ADD SP,r8
 		{
-			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
-			const address result = registers.stackPointer + offset;
 			setZeroFlag(registers.flags, false);
 			setSubtractFlag(registers.flags, false);
-			if (offset < 0)
-			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) < (result & 0x0F00));
-				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) < (result & 0xF000));
-			}
-			else
-			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) > (result & 0x0F00));
-				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) > (result & 0xF000));
-			}
-			registers.stackPointer = result;
+			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
+			const signed short int result = registers.stackPointer + offset;
+			setCarryFlag(registers.flags, ((registers.stackPointer ^ offset ^ (result & 0xFFFF)) & 0x100) == 0x100);
+			setHalfCarryFlag(registers.flags, ((registers.stackPointer ^ offset ^ (result & 0xFFFF)) & 0x10) == 0x10);
+			registers.stackPointer = static_cast<address> (result);
 			registers.programCounter += 0x01;
 			return 16;
 		}
@@ -754,17 +746,9 @@ cycle Cpu::processNext(Memory &memory)
 			setZeroFlag(registers.flags, false);
 			setSubtractFlag(registers.flags, false);
 			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
-			const address result = registers.stackPointer + offset;
-			if (offset < 0)
-			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) < (result & 0x0F00));
-				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) < (result & 0xF000));
-			}
-			else
-			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) > (result & 0x0F00));
-				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) > (result & 0xF000));
-			}
+			const signed short int result = registers.stackPointer + offset;
+			setCarryFlag(registers.flags, ((registers.stackPointer ^ offset ^ (result & 0xFFFF)) & 0x100) == 0x100);
+			setHalfCarryFlag(registers.flags, ((registers.stackPointer ^ offset ^ (result & 0xFFFF)) & 0x10) == 0x10);
 			registers.H = static_cast<byte> (result >> 8);
 			registers.L = static_cast<byte> (result & 0x00FF);
 			registers.programCounter += 0x01;

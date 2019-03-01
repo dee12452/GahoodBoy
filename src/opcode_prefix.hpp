@@ -65,6 +65,7 @@ inline cycle SRA(byte &flags, byte &reg)
 {
 	setCarryFlag(flags, (reg & 0x01) == 0x01);
 	reg >>= 1;
+	if((reg & 0x40) == 0x40) reg |= 0x80;
 	setSubtractFlag(flags, false);
 	setHalfCarryFlag(flags, false);
 	setZeroFlag(flags, reg == 0x00);
