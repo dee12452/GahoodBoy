@@ -3,7 +3,6 @@
 
 #include "memory.hpp"
 
-inline void resetFlags(byte &flags);
 inline bool getCarryFlag(const byte flags);
 inline void setCarryFlag(byte &flags, const bool on);
 inline bool getHalfCarryFlag(const byte flags);
@@ -338,67 +337,51 @@ inline cycle CCF(byte &flags)
 }
 
 /* Rotation / Shifts */
-inline cycle RLCA(byte &flags, byte &regA)
-{
-    const bool carry = (regA & 0x80) == 0x80;
-    regA <<= 1;
-    regA = carry ? regA | 0x01 : regA;
-	if(carry)
-	{
-		setCarryFlag(flags, carry);
-	}
-    else
-	{
-		resetFlags(flags);
-	}
-    return 4;
-}
-
 inline cycle RLA(byte &flags, byte &regA)
 {
     const bool carry = (regA & 0x80) == 0x80;
     regA <<= 1;
-    regA = getCarryFlag(flags) ? regA | 0x01 : regA;
-    if(carry)
-	{
-		setCarryFlag(flags, carry);
-	}
-    else
-	{
-		resetFlags(flags);
-	}
+    regA = carry ? regA | 0x01 : regA;
+    setCarryFlag(flags, carry);
+    setZeroFlag(flags, false);
+    setSubtractFlag(flags, false);
+    setHalfCarryFlag(flags, false);
     return 4;
 }
 
-inline cycle RRCA(byte &flags, byte &regA)
+inline cycle RLCA(byte &flags, byte &regA)
 {
-	const bool carry = (regA & 0x01) == 0x01;
-	regA >>= 1;
-	regA = carry ? regA | 0x80 : regA;
-	if(carry)
-	{
-		setCarryFlag(flags, carry);
-	}
-    else
-	{
-		resetFlags(flags);
-	}
-	return 4;
+    const bool carry = (regA & 0x80) == 0x80;
+    regA <<= 1;
+    regA = getCarryFlag(flags) ? regA | 0x01 : regA;
+    setCarryFlag(flags, carry);
+    setZeroFlag(flags, false);
+    setSubtractFlag(flags, false);
+    setHalfCarryFlag(flags, false);
+    return 4;
 }
 
 inline cycle RRA(byte &flags, byte &regA)
 {
 	const bool carry = (regA & 0x01) == 0x01;
 	regA >>= 1;
+	regA = carry ? regA | 0x80 : regA;
+	setCarryFlag(flags, carry);
+	setZeroFlag(flags, false);
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
+	return 4;
+}
+
+inline cycle RRCA(byte &flags, byte &regA)
+{
+	const bool carry = (regA & 0x01) == 0x01;
+	regA >>= 1;
 	regA = getCarryFlag(flags) ? regA | 0x80 : regA;
-	if(carry)
-	{
-		setCarryFlag(flags, carry);
-	}
-    else
-	{
-		resetFlags(flags);
-	}
+	setCarryFlag(flags, carry);
+	setZeroFlag(flags, false);
+	setSubtractFlag(flags, false);
+	setHalfCarryFlag(flags, false);
 	return 4;
 }
 
@@ -489,11 +472,6 @@ inline cycle RST(Memory &memory, address &programCounter, address &stackPointer,
 }
 
 /* Flag getters and setters */
-inline void resetFlags(byte &flags)
-{
-	flags &= 0x00;
-}
-
 inline void setCarryFlag(byte &flags, const bool on)
 {
     if(on)
