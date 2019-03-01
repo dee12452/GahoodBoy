@@ -181,7 +181,7 @@ inline cycle ADC(byte &flags, byte &reg1, const byte reg2)
 
 inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
 {
-    setHalfCarryFlag(flags, (regHigh & 0x0F) + (addHigh & 0x0F) > 0x0F);
+	setHalfCarryFlag(flags, 0x0F - (regHigh & 0x0F) < (addHigh & 0x0F));
     setCarryFlag(flags, (0xFF - regHigh) < addHigh);
     setSubtractFlag(flags, false);
     const address sum = Gahood::addressFromBytes(regHigh, regLow) + Gahood::addressFromBytes(addHigh, addLow);
