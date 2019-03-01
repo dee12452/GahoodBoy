@@ -833,7 +833,7 @@ cycle Cpu::processNextPrefix(Memory &memory)
 		return clocks * 2;
 	}
 	case 0x07: // RLC A
-		return RRC(registers.flags, registers.A);
+		return RLC(registers.flags, registers.A);
 	case 0x08: // RRC B
 		return RRC(registers.flags, registers.B);
 	case 0x09: // RRC C
@@ -933,12 +933,12 @@ cycle Cpu::processNextPrefix(Memory &memory)
 	case 0x2E: // SRA (HL)
 	{
 		byte value = memory.read(Gahood::addressFromBytes(registers.H, registers.L));
-		const cycle clocks = SLA(registers.flags, value);
+		const cycle clocks = SRA(registers.flags, value);
 		memory.write(Gahood::addressFromBytes(registers.H, registers.L), value);
 		return clocks * 2;
 	}
 	case 0x2F: // SRA A
-		return SLA(registers.flags, registers.A);
+		return SRA(registers.flags, registers.A);
 	case 0x30: // SWAP B
 		return SWAP(registers.flags, registers.B);
 	case 0x31: // SWAP C
