@@ -176,22 +176,13 @@ inline cycle ADD(byte &flags, byte &reg1, const byte reg2)
 
 inline cycle ADC(byte &flags, byte &reg1, const byte reg2)
 {
-	const byte carry = getCarryFlag(flags) ? 0x01 : 0x00;
-	setHalfCarryFlag(flags, 0x0F - (reg1 & 0x0F) <  ((reg2 + carry) & 0x0F));
-	setCarryFlag(flags, (0xFF - reg1) < (reg2 + carry));
-	reg1 += reg2;
-	reg1 += carry;
-
-	setZeroFlag(flags, reg1 == 0x00);
-	setSubtractFlag(flags, false);
-
-	return 4;
+	return ADD(flags, reg1, reg2 + (getCarryFlag(flags) ? 0x01 : 0x00));
 }
 
 inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
 {
-    setHalfCarryFlag(flags, (regLow & 0x0F) + (addLow & 0x0F) > 0x0F);
-    setCarryFlag(flags, (0xFF - regLow) < addLow);
+    setHalfCarryFlag(flags, (regHigh & 0x0F) + (addHigh & 0x0F) > 0x0F);
+    setCarryFlag(flags, (0xFF - regHigh) < addHigh);
     setSubtractFlag(flags, false);
     const address sum = Gahood::addressFromBytes(regHigh, regLow) + Gahood::addressFromBytes(addHigh, addLow);
     regHigh = static_cast<byte> (sum >> 8);
@@ -337,7 +328,7 @@ inline cycle CCF(byte &flags)
 }
 
 /* Rotation / Shifts */
-inline cycle RLA(byte &flags, byte &regA)
+inline cycle RLCA(byte &flags, byte &regA)
 {
     const bool carry = (regA & 0x80) == 0x80;
     regA <<= 1;
@@ -349,7 +340,7 @@ inline cycle RLA(byte &flags, byte &regA)
     return 4;
 }
 
-inline cycle RLCA(byte &flags, byte &regA)
+inline cycle RLA(byte &flags, byte &regA)
 {
     const bool carry = (regA & 0x80) == 0x80;
     regA <<= 1;
@@ -361,7 +352,7 @@ inline cycle RLCA(byte &flags, byte &regA)
     return 4;
 }
 
-inline cycle RRA(byte &flags, byte &regA)
+inline cycle RRCA(byte &flags, byte &regA)
 {
 	const bool carry = (regA & 0x01) == 0x01;
 	regA >>= 1;
@@ -373,7 +364,7 @@ inline cycle RRA(byte &flags, byte &regA)
 	return 4;
 }
 
-inline cycle RRCA(byte &flags, byte &regA)
+inline cycle RRA(byte &flags, byte &regA)
 {
 	const bool carry = (regA & 0x01) == 0x01;
 	regA >>= 1;

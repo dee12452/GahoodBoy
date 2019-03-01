@@ -3,7 +3,7 @@
 
 #include "opcode.hpp"
 
-inline cycle RL(byte &flags, byte &reg)
+inline cycle RLC(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x80) == 0x80;
 	reg <<= 1;
@@ -15,7 +15,7 @@ inline cycle RL(byte &flags, byte &reg)
 	return 8;
 }
 
-inline cycle RLC(byte &flags, byte &reg)
+inline cycle RL(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x80) == 0x80;
 	reg <<= 1;
@@ -27,7 +27,7 @@ inline cycle RLC(byte &flags, byte &reg)
 	return 8;
 }
 
-inline cycle RR(byte &flags, byte &reg)
+inline cycle RRC(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x01) == 0x01;
 	reg >>= 1;
@@ -39,7 +39,7 @@ inline cycle RR(byte &flags, byte &reg)
 	return 8;
 }
 
-inline cycle RRC(byte &flags, byte &reg)
+inline cycle RR(byte &flags, byte &reg)
 {
 	const bool carry = (reg & 0x01) == 0x01;
 	reg >>= 1;

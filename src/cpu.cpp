@@ -192,7 +192,7 @@ cycle Cpu::processNext(Memory &memory)
 			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
 			registers.A = memory.read(addrToRead);
 			addrToRead += 0x01;
-			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
+			registers.H = static_cast<byte> (addrToRead >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
 			return 8;
 		}
@@ -240,7 +240,7 @@ cycle Cpu::processNext(Memory &memory)
 			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
 			registers.A = memory.read(addrToRead);
 			addrToRead -= 0x01;
-			registers.H = static_cast<byte> ((addrToRead & 0xFF00) >> 8);
+			registers.H = static_cast<byte> (addrToRead >> 8);
 			registers.L = static_cast<byte> (addrToRead & 0x00FF);
 			return 8;
 		}
@@ -419,7 +419,7 @@ cycle Cpu::processNext(Memory &memory)
 		case 0x86: // ADD A,(HL)
 			return ADD(registers.flags, registers.A, memory.read(Gahood::addressFromBytes(registers.H, registers.L))) * 2;
 		case 0x87: // ADD A,A
-			return ADC(registers.flags, registers.A, registers.A);
+			return ADD(registers.flags, registers.A, registers.A);
 		case 0x88: // ADC A,B
 			return ADC(registers.flags, registers.A, registers.B);
 		case 0x89: // ADC A,C
@@ -679,11 +679,13 @@ cycle Cpu::processNext(Memory &memory)
 			setSubtractFlag(registers.flags, false);
 			if (offset < 0)
 			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) < (result & 0x000F));
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) < (result & 0x0F00));
+				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) < (result & 0xF000));
 			}
 			else
 			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) > (result & 0x000F));
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) > (result & 0x0F00));
+				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) > (result & 0xF000));
 			}
 			registers.stackPointer = result;
 			registers.programCounter += 0x01;
@@ -753,14 +755,15 @@ cycle Cpu::processNext(Memory &memory)
 			setSubtractFlag(registers.flags, false);
 			const signed char offset = static_cast<signed char> (memory.read(registers.programCounter));
 			const address result = registers.stackPointer + offset;
-			setCarryFlag(registers.flags, (result & 0xFF00) == (registers.stackPointer & 0xFF00));
 			if (offset < 0)
 			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) < (result & 0x000F));
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) < (result & 0x0F00));
+				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) < (result & 0xF000));
 			}
 			else
 			{
-				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x000F) > (result & 0x000F));
+				setHalfCarryFlag(registers.flags, (registers.stackPointer & 0x0F00) > (result & 0x0F00));
+				setCarryFlag(registers.flags, (registers.stackPointer & 0xF000) > (result & 0xF000));
 			}
 			registers.H = static_cast<byte> (result >> 8);
 			registers.L = static_cast<byte> (result & 0x00FF);
