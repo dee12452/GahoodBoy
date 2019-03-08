@@ -179,15 +179,17 @@ inline cycle ADC(byte &flags, byte &reg1, const byte reg2)
 	return ADD(flags, reg1, reg2 + (getCarryFlag(flags) ? 0x01 : 0x00));
 }
 
-inline cycle ADD16(address &programCounter, byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
+inline cycle ADD16(byte &flags, byte &regHigh, byte &regLow, const byte addHigh, const byte addLow)
 {
-	setHalfCarryFlag(flags, 0x0F - (regHigh & 0x0F) < (addHigh & 0x0F));
-    setCarryFlag(flags, (0xFF - regHigh) < addHigh);
-    setSubtractFlag(flags, false);
-    const address sum = Gahood::addressFromBytes(regHigh, regLow) + Gahood::addressFromBytes(addHigh, addLow);
-    regHigh = static_cast<byte> (sum >> 8);
-	regLow = static_cast<byte> (sum & 0x00FF);
-    return 8;
+	setSubtractFlag(flags, false);
+	const address reg16 = Gahood::addressFromBytes(regHigh, regLow);
+	const address offset = Gahood::addressFromBytes(addHigh, addLow);
+	const unsigned short int result = reg16 + offset;
+	setCarryFlag(flags, ((reg16 ^ offset ^ (result & 0xFFFF)) & 0x100) == 0x100);
+	setHalfCarryFlag(flags, ((reg16 ^ offset ^ (result & 0xFFFF)) & 0x10) == 0x10);
+	regHigh = static_cast<byte> (result >> 8);
+	regLow = static_cast<byte> (result & 0xFF);
+	return 8;
 }
 
 inline cycle SUB(byte &flags, byte &reg1, const byte reg2)

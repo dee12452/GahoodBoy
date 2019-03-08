@@ -106,7 +106,7 @@ cycle Cpu::processNext(Memory &memory)
 			return 20;
 		}
         case 0x09: // ADD HL,BC
-            return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.B, registers.C);
+            return ADD16(registers.flags, registers.H, registers.L, registers.B, registers.C);
 		case 0x0A: // LD A,(BC)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(registers.B, registers.C));
@@ -142,7 +142,7 @@ cycle Cpu::processNext(Memory &memory)
 		case 0x18: // JR r8
 			return JR(memory, registers.programCounter, true);
         case 0x19: // ADD HL,DE
-            return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.D, registers.E);
+            return ADD16(registers.flags, registers.H, registers.L, registers.D, registers.E);
 		case 0x1A: // LD A,(DE)
 		{
 			registers.A = memory.read(Gahood::addressFromBytes(registers.D, registers.E));
@@ -184,7 +184,7 @@ cycle Cpu::processNext(Memory &memory)
 		case 0x28: // JR Z,r8
 			return JR(memory, registers.programCounter, getZeroFlag(registers.flags));
         case 0x29: // ADD HL,HL
-            return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, registers.H, registers.L);
+            return ADD16(registers.flags, registers.H, registers.L, registers.H, registers.L);
 		case 0x30: // JR NC,r8
 			return JR(memory, registers.programCounter, !getCarryFlag(registers.flags));
 		case 0x2A: // LD A,(HL+)
@@ -234,7 +234,7 @@ cycle Cpu::processNext(Memory &memory)
 		case 0x38: // JR C,r8
 			return JR(memory, registers.programCounter, getCarryFlag(registers.flags));
         case 0x39: // ADD HL,SP
-            return ADD16(registers.programCounter, registers.flags, registers.H, registers.L, static_cast<byte> (registers.stackPointer >> 8), static_cast<byte> (registers.stackPointer & 0x00FF));
+            return ADD16(registers.flags, registers.H, registers.L, static_cast<byte> (registers.stackPointer >> 8), static_cast<byte> (registers.stackPointer & 0xFF));
 		case 0x3A: // LD A,(HL-)
 		{
 			address addrToRead = Gahood::addressFromBytes(registers.H, registers.L);
